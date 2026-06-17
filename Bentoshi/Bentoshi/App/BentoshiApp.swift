@@ -6,12 +6,14 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct BentoshiApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            AppRootView()
         }
+        .modelContainer(for: [Workspace.self, Artefact.self, SearchIndex.self])
     }
 }

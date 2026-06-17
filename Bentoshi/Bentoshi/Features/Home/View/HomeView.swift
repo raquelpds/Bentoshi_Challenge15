@@ -7,7 +7,10 @@
 
 import SwiftUI
 
-struct ContentView: View {
+struct HomeView: View {
+    
+    @State var presenter: HomePresenter
+    
     var body: some View {
         VStack {
             Image(systemName: "globe")
@@ -20,5 +23,12 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    struct PreviewWithContextWrapper: View {
+        @Environment(\.modelContext) private var context
+        var body: some View {
+            HomeBuilder.build(context: context)
+        }
+    }
+    
+    return PreviewWithContextWrapper()
 }
