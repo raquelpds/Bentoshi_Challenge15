@@ -23,5 +23,12 @@ struct WorkspaceView: View {
 }
 
 #Preview {
-    WorkspaceView()
+    struct PreviewWithContextWrapper: View {
+        @Environment(\.modelContext) private var context
+        var body: some View {
+            WorkspaceBuilder.build(context: context)
+        }
+    }
+    
+    return PreviewWithContextWrapper()
 }

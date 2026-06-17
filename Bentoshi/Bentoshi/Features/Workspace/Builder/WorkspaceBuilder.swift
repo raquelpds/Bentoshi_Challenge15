@@ -7,7 +7,7 @@
 
 import SwiftData
 
-enum Workspaceuilder {
+enum WorkspaceBuilder {
 
     @MainActor
     static func build(context: ModelContext) -> WorkspaceView {
