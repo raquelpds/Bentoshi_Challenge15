@@ -10,15 +10,61 @@ import SwiftUI
 struct HomeView: View {
     
     @State var presenter: HomePresenter
+    @State private var showModal = false
+    @State private var shouldReloadWorkspaces = false
+    @Environment(\.modelContext) private var context
+    
+    private let columns = [
+        GridItem(.flexible(), spacing: 16),
+        GridItem(.flexible(), spacing: 16),
+        GridItem(.flexible(), spacing: 16)
+    ]
     
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        
+        NavigationStack {
+            
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 16) {
+                    
+                    Button {
+                        showModal = true
+                    } label: {
+                        AddWorkspaceCard()
+                    }
+                    .buttonStyle(.plain)
+                    
+                    ForEach(presenter.workspaces) { workspace in
+                        NavigationLink {
+                            WorkspaceBuilder.build(context: context, workspace: workspace, shouldReloadWorkspace: $shouldReloadWorkspaces)
+                        } label: {
+                            WorkspaceCard(workspaceName: workspace.name, color: workspace.coverColor)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle("Workspaces")
         }
-        .padding()
+        .sheet(isPresented: $showModal) {
+            CreateWorkspaceView { workspace, newName, newColor in
+                Task {
+                    await presenter.addWorkspace(workspace)
+                }
+            }
+        }
+        .task {
+            await presenter.listWorkspaces()
+        }
+        .onChange(of: shouldReloadWorkspaces) { oldValue, newValue in
+            if (shouldReloadWorkspaces) {
+                Task {
+                    await presenter.listWorkspaces()
+                }
+                shouldReloadWorkspaces = false
+            }
+        }
     }
 }
 
