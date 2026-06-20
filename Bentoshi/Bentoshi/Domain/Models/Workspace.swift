@@ -7,12 +7,13 @@
 
 import SwiftData
 import Foundation
+import SwiftUI
 
 @Model
 final class Workspace {
     var id: UUID
-    var title: String
-    var coverColor: String
+    var name: String
+    var coverColor: WorkspaceColor
     
     @Relationship(deleteRule: .cascade)
     var artefacts: [Artefact]
@@ -20,12 +21,12 @@ final class Workspace {
     @Relationship(deleteRule: .cascade)
     var searchIndexes: [SearchIndex]
     
-    init(title: String, coverColor: String) {
+    init(name: String, coverColor: WorkspaceColor = .gray) {
         self.id = UUID()
-        self.title = title
-        self.coverColor = coverColor
+        self.name = name
         self.artefacts = []
         self.searchIndexes = []
+        self.coverColor = coverColor
         
         rebuildSearchIndexes()
     }
@@ -48,7 +49,7 @@ extension Workspace {
     }
 
     var searchableKeywords: [String] {
-        title
+        name
             .lowercased()
             .folding(
                 options: .diacriticInsensitive,
