@@ -9,15 +9,15 @@ import SwiftUI
 
 struct WorkspaceCard: View {
 
-    let workspaceName: String
-    let color: Color
+    let workspace: Workspace
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(spacing: 0) {
-            color.opacity(0.3)
+            WorkspaceColorPalette.color(for: workspace.coverColor, scheme: colorScheme)
 
             HStack {
-                Text(workspaceName)
+                Text(workspace.name)
                     .font(.headline)
                     .fontWeight(.semibold)
                 Spacer()
@@ -32,5 +32,5 @@ struct WorkspaceCard: View {
 }
 
 #Preview {
-    WorkspaceCard(workspaceName: "Workspace", color: .blue)
+    WorkspaceCard(workspace: Workspace(name: "teste", coverColor: .blueDark))
 }

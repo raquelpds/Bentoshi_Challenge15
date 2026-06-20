@@ -13,9 +13,9 @@ struct CreateWorkspaceView: View {
 
     @State private var showError = false
     @State private var workspaceName = ""
-    @State private var selectedColor: Color = .gray
+    @State private var selectedColor: WorkspaceColor = .gray
     
-    var onSave: (Workspace, String?, Color?) -> Void
+    var onSave: (Workspace, String?, WorkspaceColor?) -> Void
 
     var body: some View {
         VStack(spacing: 20) {
@@ -47,8 +47,8 @@ struct CreateWorkspaceView: View {
                 }
             }
 
-            ColorPicker("Cor da capa", selection: $selectedColor)
-
+            WorkspaceColorSelector(selection: $selectedColor)
+            
             HStack(spacing: 12) {
                 Button {
                     NSColorPanel.shared.close()
@@ -85,9 +85,10 @@ struct CreateWorkspaceView: View {
 extension CreateWorkspaceView {
     
     func save() {
-        let workspace = Workspace(name: workspaceName)
+        let workspace = Workspace(name: workspaceName, coverColor: selectedColor)
         onSave(workspace, workspaceName, selectedColor)
         NSColorPanel.shared.close()
         dismiss()
     }
+    
 }

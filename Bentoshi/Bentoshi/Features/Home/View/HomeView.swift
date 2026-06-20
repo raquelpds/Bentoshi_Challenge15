@@ -38,7 +38,7 @@ struct HomeView: View {
                         NavigationLink {
                             WorkspaceBuilder.build(context: context, workspace: workspace, shouldReloadWorkspace: $shouldReloadWorkspaces)
                         } label: {
-                            WorkspaceCard(workspaceName: workspace.name, color: workspace.coverColor)
+                            WorkspaceCard(workspace: workspace)
                         }
                         .buttonStyle(.plain)
                     }

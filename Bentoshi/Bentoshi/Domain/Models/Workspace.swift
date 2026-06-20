@@ -13,9 +13,7 @@ import SwiftUI
 final class Workspace {
     var id: UUID
     var name: String
-    var coverColor: Color {
-        .gray
-    }
+    var coverColor: WorkspaceColor
     
     @Relationship(deleteRule: .cascade)
     var artefacts: [Artefact]
@@ -23,11 +21,12 @@ final class Workspace {
     @Relationship(deleteRule: .cascade)
     var searchIndexes: [SearchIndex]
     
-    init(name: String) {
+    init(name: String, coverColor: WorkspaceColor = .gray) {
         self.id = UUID()
         self.name = name
         self.artefacts = []
         self.searchIndexes = []
+        self.coverColor = coverColor
         
         rebuildSearchIndexes()
     }

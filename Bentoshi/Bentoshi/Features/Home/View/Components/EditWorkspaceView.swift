@@ -12,15 +12,15 @@ struct EditWorkspaceView: View {
     let workspace: Workspace
     
     @Environment(\.dismiss) private var dismiss
+    var onSave: (Workspace, String?, WorkspaceColor?) -> Void
     
     @State private var showError = false
     @State private var workspaceName: String
-    @State private var selectedColor: Color
-    
+    @State private var selectedColor: WorkspaceColor
     
     init(
         workspace: Workspace,
-        onSave: @escaping (Workspace, String?, Color?) -> Void
+        onSave: @escaping (Workspace, String?, WorkspaceColor?) -> Void
     ) {
         self.workspace = workspace
         self.onSave = onSave
@@ -29,8 +29,6 @@ struct EditWorkspaceView: View {
         _selectedColor = State(initialValue: workspace.coverColor)
     }
     
-    var onSave: (Workspace, String?, Color?) -> Void
-
     var body: some View {
         VStack(spacing: 20) {
 
@@ -61,8 +59,8 @@ struct EditWorkspaceView: View {
                 }
             }
 
-            ColorPicker("Cor da capa", selection: $selectedColor)
-
+            WorkspaceColorSelector(selection: $selectedColor)
+            
             HStack(spacing: 12) {
                 Button {
                     NSColorPanel.shared.close()
@@ -98,8 +96,7 @@ struct EditWorkspaceView: View {
 
 extension EditWorkspaceView {
     func save() {
-        onSave(workspace, workspaceName, nil)
-        
+        onSave(workspace, workspaceName, selectedColor)
         NSColorPanel.shared.close()
         dismiss()
     }

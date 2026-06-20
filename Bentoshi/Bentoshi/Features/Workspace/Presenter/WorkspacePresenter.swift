@@ -33,10 +33,12 @@ final class WorkspacePresenter {
     
     func updateWorkspace(
         _ workspace: Workspace,
-        newName: String
+        newName: String,
+        newCoverColor: WorkspaceColor
     ) async {
 
         workspace.name = newName
+        workspace.coverColor = newCoverColor
 
         do {
             try await interactor.updateWorkspace()

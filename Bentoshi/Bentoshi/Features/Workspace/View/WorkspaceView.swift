@@ -83,14 +83,10 @@ struct WorkspaceView: View {
         }
         //sheet edicao
         .sheet(isPresented: $showEditSheet) {
-            EditWorkspaceView(workspace: current) { workspace, newName, _ in
-
-                guard let newName else { return }
-
-                workspace.name = newName
+            EditWorkspaceView(workspace: current) { workspace, newName, newCoverColor in
 
                 Task {
-                    await presenter.updateWorkspace(workspace, newName: workspace.name)
+                    await presenter.updateWorkspace(workspace, newName: newName ?? workspace.name, newCoverColor: newCoverColor ?? workspace.coverColor )
                 }
                 
                 shouldReloadWorkspaces = true
