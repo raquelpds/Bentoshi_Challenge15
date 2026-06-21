@@ -13,9 +13,11 @@ final class Artefact {
 
     var id: UUID
 
-    var title: String
+    var name: String
     var type: ArtefactType
     var content: String
+    
+    var bookmark: Data?
 
     var width: Double
     var height: Double
@@ -25,10 +27,10 @@ final class Artefact {
     @Relationship(deleteRule: .cascade)
     var searchIndexes: [SearchIndex]
 
-    init(title: String, type: ArtefactType, content: String, width: Double, height: Double, positionX: Int, positionY: Int) {
+    init(name: String, type: ArtefactType, content: String, width: Double, height: Double, positionX: Int, positionY: Int, bookmark: Data? = nil) {
         self.id = UUID()
 
-        self.title = title
+        self.name = name
         self.type = type
         self.content = content
 
@@ -37,6 +39,7 @@ final class Artefact {
 
         self.positionX = positionX
         self.positionY = positionY
+        self.bookmark = bookmark
 
         self.searchIndexes = []
 
@@ -46,6 +49,72 @@ final class Artefact {
 
 extension Artefact {
 
+    var searchableKeywords: [String] {
+
+        let rawKeywords: [String]
+
+        switch type {
+
+        case .text:
+            rawKeywords = extractKeywords(
+                from: [
+                    name,
+                    content
+                ]
+            )
+
+        case .link:
+            rawKeywords = extractKeywords(
+                from: [
+                    normalizedLinkName,
+                    extractURLKeywords(content)
+                ]
+            )
+
+        default:
+            rawKeywords = extractKeywords(
+                from: [
+                    name
+                ]
+            )
+        }
+
+        return Array(
+            Set(
+                rawKeywords.filter {
+                    !$0.isEmpty
+                }
+            )
+        )
+    }
+    
+    var archiveUrl: URL? {
+        var isStale = false
+
+        guard let bookmark = bookmark, let resolvedUrl = try? URL(
+            resolvingBookmarkData: bookmark,
+            options: [.withSecurityScope],
+            relativeTo: nil,
+            bookmarkDataIsStale: &isStale
+        ) else {
+            return nil
+        }
+
+        return resolvedUrl
+    }
+}
+
+extension Artefact {
+    func checkIsMissingFilePath() -> Bool {
+        guard let url = archiveUrl else { return true }
+        return !FileManager.default.fileExists(
+            atPath: url.path
+        )
+    }
+}
+
+private extension Artefact {
+    
     func rebuildSearchIndexes() {
 
         searchIndexes.removeAll()
@@ -61,48 +130,6 @@ extension Artefact {
             )
         }
     }
-
-    var searchableKeywords: [String] {
-
-        let rawKeywords: [String]
-
-        switch type {
-
-        case .text:
-            rawKeywords = extractKeywords(
-                from: [
-                    title,
-                    content
-                ]
-            )
-
-        case .link:
-            rawKeywords = extractKeywords(
-                from: [
-                    normalizedLinkTitle,
-                    extractURLKeywords(content)
-                ]
-            )
-
-        default:
-            rawKeywords = extractKeywords(
-                from: [
-                    title
-                ]
-            )
-        }
-
-        return Array(
-            Set(
-                rawKeywords.filter {
-                    !$0.isEmpty
-                }
-            )
-        )
-    }
-}
-
-private extension Artefact {
 
     func extractKeywords(from values: [String]) -> [String] {
         values
@@ -142,10 +169,10 @@ private extension Artefact {
             )
     }
 
-    var normalizedLinkTitle: String {
+    var normalizedLinkName: String {
 
         let normalizedTitle =
-            normalize(title)
+            normalize(name)
 
         let normalizedContent =
             normalize(content)
@@ -154,6 +181,6 @@ private extension Artefact {
             return extractURLKeywords(content)
         }
 
-        return title
+        return name
     }
 }
