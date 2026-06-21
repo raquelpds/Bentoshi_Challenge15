@@ -18,18 +18,9 @@ final class HomePresenter {
         self.interactor = interactor
     }
     
-    func listWorkspaces() async {
-        do {
-            workspaces = try await interactor.fetchAllWorkspaces()
-        } catch {
-            print(error)
-        }
-    }
-    
     func addWorkspace(_ workspace: Workspace) async {
         do {
             try await interactor.createWorkspace(workspace)
-            await listWorkspaces()
         } catch {
             print("Erro ao adicionar workspaces")
         }
@@ -38,7 +29,6 @@ final class HomePresenter {
     func deleteWorkspace(_ workspace: Workspace) async {
         do {
             try await interactor.deleteWorkspace(id: workspace.id)
-            await listWorkspaces()
         } catch {
             print("Erro ao deletar workspaces")
         }
@@ -51,7 +41,6 @@ final class HomePresenter {
 
         do {
             try await interactor.updateWorkspace()
-            await listWorkspaces()
         } catch {
             print("Erro ao atualizar workspace")
         }

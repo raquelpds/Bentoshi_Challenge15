@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 enum WorkspaceRoute: Identifiable {
     case editWorkspace
@@ -43,24 +44,24 @@ enum WorkspaceAlert: Identifiable {
 
 struct WorkspaceView: View {
     @Environment(\.dismiss) private var dismiss
-
+    @Query private var workspaces: [Workspace]
+    
     @State var presenter: WorkspacePresenter
     @State private var selectedID: Workspace.ID?
     @State private var route: WorkspaceRoute?
     @State private var alert: WorkspaceAlert?
-    @Binding var shouldReloadWorkspaces: Bool
 
     let workspace: Workspace
 
     private var current: Workspace {
-        presenter.allWorkspaces.first { $0.id == selectedID } ?? workspace
+        workspaces.first { $0.id == selectedID } ?? workspace
     }
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             NavigationSplitView {
                 WorkspaceSidebar(
-                    workspaces: presenter.allWorkspaces,
+                    workspaces: workspaces,
                     selectedID: $selectedID
                 )
             } detail: {
@@ -91,8 +92,7 @@ struct WorkspaceView: View {
         .workspaceSheets(
             route: $route,
             workspace: current,
-            presenter: presenter,
-            shouldReloadWorkspaces: $shouldReloadWorkspaces
+            presenter: presenter
         )
         .workspaceAlerts(
             alert: $alert,
@@ -104,9 +104,6 @@ struct WorkspaceView: View {
         .onAppear {
             selectedID = selectedID ?? workspace.id
         }
-        .task {
-            await presenter.loadWorkspaces()
-        }
     }
 }
 
@@ -117,9 +114,8 @@ extension WorkspaceView {
 
         Task {
             await presenter.deleteWorkspace(workspaceToDelete)
-            shouldReloadWorkspaces = true
 
-            if let nextWorkspace = presenter.allWorkspaces.first {
+            if let nextWorkspace = workspaces.first {
                 selectedID = nextWorkspace.id
             } else {
                 dismiss()
@@ -133,7 +129,7 @@ extension WorkspaceView {
     struct PreviewWithContextWrapper: View {
         @Environment(\.modelContext) private var context
         var body: some View {
-            WorkspaceBuilder.build(context: context, workspace: Workspace(name: "Teste"), shouldReloadWorkspace: .constant(true))
+            WorkspaceBuilder.build(context: context, workspace: Workspace(name: "Teste"))
         }
     }
     

@@ -6,13 +6,14 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct HomeView: View {
+    @Query private var workspaces: [Workspace]
     
     @State var presenter: HomePresenter
     @State private var showWorkspaceForm = false
     @State private var showWorkspaceDeleteAlert = false
-    @State private var shouldReloadWorkspaces = false
     @State private var workspaceToUpdate: Workspace?
     @State private var workspaceToDelete: Workspace?
     @Environment(\.modelContext) private var context
@@ -37,9 +38,9 @@ struct HomeView: View {
                     }
                     .buttonStyle(.plain)
                     
-                    ForEach(presenter.workspaces) { workspace in
+                    ForEach(workspaces) { workspace in
                         NavigationLink {
-                            WorkspaceBuilder.build(context: context, workspace: workspace, shouldReloadWorkspace: $shouldReloadWorkspaces)
+                            WorkspaceBuilder.build(context: context, workspace: workspace)
                         } label: {
                             WorkspaceCard(workspace: workspace)
                         }
@@ -95,17 +96,6 @@ struct HomeView: View {
             Text(
                 "Tem certeza que deseja excluir \"\(workspaceToDelete?.name ?? "")\"?"
             )
-        }
-        .task {
-            await presenter.listWorkspaces()
-        }
-        .onChange(of: shouldReloadWorkspaces) { oldValue, newValue in
-            if (shouldReloadWorkspaces) {
-                Task {
-                    await presenter.listWorkspaces()
-                }
-                shouldReloadWorkspaces = false
-            }
         }
     }
 }

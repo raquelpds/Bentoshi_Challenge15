@@ -25,18 +25,10 @@ final class WorkspacePresenter {
         self.interactor = interactor
     }
     
-    func loadWorkspaces() async {
-        do {
-            allWorkspaces = try await interactor.fetchAllWorkspaces()
-        } catch {
-            print(error)
-        }
-    }
 
     func deleteWorkspace(_ workspace: Workspace) async {
         do {
             try await interactor.deleteWorkspace(id: workspace.id)
-            await loadWorkspaces()
         } catch {
             print("Erro ao deletar workspace")
         }
@@ -49,7 +41,6 @@ final class WorkspacePresenter {
 
         do {
             try await interactor.updateWorkspace()
-            await loadWorkspaces()
         } catch {
             print("Erro ao atualizar workspace")
         }
@@ -88,7 +79,6 @@ final class WorkspacePresenter {
             workspace.artefacts.append(artefact)
             
             try await interactor.updateWorkspace()
-            await loadWorkspaces()
         } catch {
             print(error)
         }
@@ -126,7 +116,6 @@ final class WorkspacePresenter {
     func deleteArtefact(_ artefact: Artefact, from workspace: Workspace) async {
         do {
             try await interactor.deleteArtefact(id: artefact.id, from: workspace)
-            await loadWorkspaces()
         } catch {
             print("Erro ao deletar artefato: \(error)")
         }
@@ -142,7 +131,6 @@ final class WorkspacePresenter {
             )
 
             try await interactor.updateWorkspace()
-            await loadWorkspaces()
 
         } catch {
             print("Erro ao atualizar arquivo: \(error)")

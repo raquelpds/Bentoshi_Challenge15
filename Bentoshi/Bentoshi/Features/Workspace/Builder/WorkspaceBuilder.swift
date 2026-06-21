@@ -11,7 +11,7 @@ import SwiftUI
 enum WorkspaceBuilder {
 
     @MainActor
-    static func build(context: ModelContext, workspace: Workspace, shouldReloadWorkspace: Binding<Bool>) -> WorkspaceView {
+    static func build(context: ModelContext, workspace: Workspace) -> WorkspaceView {
 
         let workspaceService: WorkspaceServiceProtocol = WorkspaceService(context: context)
         
@@ -28,7 +28,6 @@ enum WorkspaceBuilder {
 
         return WorkspaceView(
             presenter: presenter,
-            shouldReloadWorkspaces: shouldReloadWorkspace,
             workspace: workspace
         )
     }

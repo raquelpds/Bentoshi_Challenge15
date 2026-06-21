@@ -11,7 +11,6 @@ struct WorkspaceSheetsModifier: ViewModifier {
     @Binding var route: WorkspaceRoute?
     let workspace: Workspace
     let presenter: WorkspacePresenter
-    @Binding var shouldReloadWorkspaces: Bool
     
     func body(content: Content) -> some View {
         content
@@ -25,7 +24,6 @@ struct WorkspaceSheetsModifier: ViewModifier {
                                 newName: name,
                                 newCoverColor: color
                             )
-                            shouldReloadWorkspaces = true
                         }
                     }
                     
@@ -59,14 +57,12 @@ extension View {
         route: Binding<WorkspaceRoute?>,
         workspace: Workspace,
         presenter: WorkspacePresenter,
-        shouldReloadWorkspaces: Binding<Bool>
     ) -> some View {
         modifier(
             WorkspaceSheetsModifier(
                 route: route,
                 workspace: workspace,
                 presenter: presenter,
-                shouldReloadWorkspaces: shouldReloadWorkspaces
             )
         )
     }
