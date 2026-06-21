@@ -13,6 +13,7 @@ struct WorkspaceAlertsModifier: ViewModifier {
 
     let workspace: Workspace
     let presenter: WorkspacePresenter
+    let onDeleteWorkspace: () -> Void
 
     func body(content: Content) -> some View {
         content
@@ -23,9 +24,7 @@ struct WorkspaceAlertsModifier: ViewModifier {
                     Alert(
                         title: Text("Excluir workspace?"),
                         primaryButton: .destructive(Text("Excluir")) {
-                            Task {
-                                await presenter.deleteWorkspace(workspace)
-                            }
+                            onDeleteWorkspace()
                         },
                         secondaryButton: .cancel()
                     )
@@ -65,14 +64,16 @@ extension View {
         alert: Binding<WorkspaceAlert?>,
         route: Binding<WorkspaceRoute?>,
         workspace: Workspace,
-        presenter: WorkspacePresenter
+        presenter: WorkspacePresenter,
+        onDeleteWorkspace: @escaping () -> Void
     ) -> some View {
         modifier(
             WorkspaceAlertsModifier(
                 alert: alert,
                 route: route,
                 workspace: workspace,
-                presenter: presenter
+                presenter: presenter,
+                onDeleteWorkspace: onDeleteWorkspace
             )
         )
     }

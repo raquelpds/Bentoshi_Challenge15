@@ -98,7 +98,8 @@ struct WorkspaceView: View {
             alert: $alert,
             route: $route,
             workspace: current,
-            presenter: presenter
+            presenter: presenter,
+            onDeleteWorkspace: deleteCurrentWorkspace
         )
         .onAppear {
             selectedID = selectedID ?? workspace.id
@@ -107,6 +108,25 @@ struct WorkspaceView: View {
             await presenter.loadWorkspaces()
         }
     }
+}
+
+extension WorkspaceView {
+    
+    private func deleteCurrentWorkspace() {
+        let workspaceToDelete = current
+
+        Task {
+            await presenter.deleteWorkspace(workspaceToDelete)
+            shouldReloadWorkspaces = true
+
+            if let nextWorkspace = presenter.allWorkspaces.first {
+                selectedID = nextWorkspace.id
+            } else {
+                dismiss()
+            }
+        }
+    }
+    
 }
 
 #Preview {

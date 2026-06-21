@@ -36,7 +36,7 @@ final class WorkspacePresenter {
     func deleteWorkspace(_ workspace: Workspace) async {
         do {
             try await interactor.deleteWorkspace(id: workspace.id)
-
+            await loadWorkspaces()
         } catch {
             print("Erro ao deletar workspace")
         }
