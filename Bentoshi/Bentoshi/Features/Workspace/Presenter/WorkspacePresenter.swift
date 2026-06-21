@@ -148,4 +148,18 @@ final class WorkspacePresenter {
             print("Erro ao atualizar arquivo: \(error)")
         }
     }
+    
+    func revealArchiveInFinder(_ artefact: Artefact) {
+        guard let url = artefact.archiveUrl else { return }
+
+        let accessing = url.startAccessingSecurityScopedResource()
+
+        defer {
+            if accessing {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        NSWorkspace.shared.activateFileViewerSelecting([url])
+    }
 }

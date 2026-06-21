@@ -33,6 +33,12 @@ struct WorkspaceDetailContent: View {
                         route = .updateArchive(artefact)
                     } onDelete: {
                         alert = .deleteArtefact(artefact)
+                    } onRevealInFinder: {
+                        if artefact.checkIsMissingArchivePath() {
+                            alert = .missingArchive(artefact)
+                        } else {
+                            presenter.revealArchiveInFinder(artefact)
+                        }
                     }
                 }
             }
