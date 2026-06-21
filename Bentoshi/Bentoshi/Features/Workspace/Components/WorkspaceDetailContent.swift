@@ -11,6 +11,7 @@ struct WorkspaceDetailContent: View {
     let workspace: Workspace
     let presenter: WorkspacePresenter
     @Binding var route: WorkspaceRoute?
+    @Binding var alert: WorkspaceAlert?
 
     var body: some View {
         ScrollView {
@@ -27,9 +28,7 @@ struct WorkspaceDetailContent: View {
                     } onUpdate: {
                         route = .updateArchive(artefact)
                     } onDelete: {
-                        Task {
-                            await presenter.deleteArtefact(artefact, from: workspace)
-                        }
+                        alert = .deleteArtefact(artefact)
                     }
                 }
             }
@@ -46,9 +45,7 @@ struct WorkspaceDetailContent: View {
                     }
 
                     Button(role: .destructive) {
-                        Task {
-                            await presenter.deleteWorkspace(workspace)
-                        }
+                        alert = .deleteWorkspace
                     } label: {
                         Label("Excluir", systemImage: "trash")
                     }

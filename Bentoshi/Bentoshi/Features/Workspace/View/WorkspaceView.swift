@@ -24,12 +24,30 @@ enum WorkspaceRoute: Identifiable {
     }
 }
 
+enum WorkspaceAlert: Identifiable {
+    case deleteWorkspace
+    case deleteArtefact(Artefact)
+    case missingArchive(Artefact)
+
+    var id: String {
+        switch self {
+        case .deleteWorkspace:
+            "deleteWorkspace"
+        case .deleteArtefact(let artefact):
+            "deleteArtefact-\(artefact.id)"
+        case .missingArchive(let artefact):
+            "missingArchive-\(artefact.id)"
+        }
+    }
+}
+
 struct WorkspaceView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State var presenter: WorkspacePresenter
     @State private var selectedID: Workspace.ID?
     @State private var route: WorkspaceRoute?
+    @State private var alert: WorkspaceAlert?
     @Binding var shouldReloadWorkspaces: Bool
 
     let workspace: Workspace
@@ -49,7 +67,8 @@ struct WorkspaceView: View {
                 WorkspaceDetailContent(
                     workspace: current,
                     presenter: presenter,
-                    route: $route
+                    route: $route,
+                    alert: $alert
                 )
             }
 
@@ -74,6 +93,12 @@ struct WorkspaceView: View {
             workspace: current,
             presenter: presenter,
             shouldReloadWorkspaces: $shouldReloadWorkspaces
+        )
+        .workspaceAlerts(
+            alert: $alert,
+            route: $route,
+            workspace: current,
+            presenter: presenter
         )
         .onAppear {
             selectedID = selectedID ?? workspace.id
