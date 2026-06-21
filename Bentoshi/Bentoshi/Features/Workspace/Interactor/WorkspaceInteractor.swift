@@ -34,6 +34,8 @@ final class WorkspaceInteractor {
         
         workspace.rebuildSearchIndexes()
         
+        workspace.updatedAt = Date()
+        
         try workspaceService.update()
     }
     
@@ -41,6 +43,8 @@ final class WorkspaceInteractor {
         try searchIndexService.deleteAutomaticIndexes(indexes: artefact.searchIndexes)
         
         artefact.rebuildAutomaticSearchIndexes()
+        
+        artefact.workspace?.updatedAt = Date()
         
         try workspaceService.update()
     }

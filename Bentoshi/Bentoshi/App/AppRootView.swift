@@ -13,7 +13,9 @@ struct AppRootView: View {
     @Environment(\.modelContext) private var context
     
     var body: some View {
-        HomeBuilder.build(context: context)
+        NavigationStack {
+            HomeBuilder.build(context: context)
+        }
     }
 }
 

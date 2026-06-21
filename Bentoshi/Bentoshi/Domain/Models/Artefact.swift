@@ -17,6 +17,8 @@ final class Artefact {
     var type: ArtefactType
     var content: String
     var workspaceId: UUID
+    var createdAt: Date
+    var updatedAt: Date
     
     var width: Double
     var height: Double
@@ -31,7 +33,9 @@ final class Artefact {
 
     init(name: String, type: ArtefactType, content: String, workspaceId: UUID, width: Double, height: Double, positionX: Int, positionY: Int, bookmark: Data? = nil) {
         self.id = UUID()
-
+        self.createdAt = Date()
+        self.updatedAt = Date()
+        
         self.name = name
         self.type = type
         self.content = content

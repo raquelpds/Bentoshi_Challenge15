@@ -6,6 +6,7 @@
 //
 
 import SwiftData
+import Foundation
 
 final class HomeInteractor {
     
@@ -22,6 +23,7 @@ final class HomeInteractor {
         try searchIndexService.deleteAutomaticIndexes(indexes: workspace.searchIndexes)
         
         workspace.rebuildSearchIndexes()
+        workspace.updatedAt = Date()
         
         try workspaceService.update()
     }
