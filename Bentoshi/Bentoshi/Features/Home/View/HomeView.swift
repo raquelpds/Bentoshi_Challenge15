@@ -48,7 +48,7 @@ struct HomeView: View {
             .navigationTitle("Workspaces")
         }
         .sheet(isPresented: $showModal) {
-            CreateWorkspaceView { workspace, newName, newColor in
+            WorkspaceFormView(mode: .create) { workspace, name, color in
                 Task {
                     await presenter.addWorkspace(workspace)
                 }

@@ -18,12 +18,12 @@ struct WorkspaceSheetsModifier: ViewModifier {
             .sheet(item: $route) { route in
                 switch route {
                 case .editWorkspace:
-                    EditWorkspaceView(workspace: workspace) { workspace, newName, newCoverColor in
+                    WorkspaceFormView(mode: .edit(workspace)) { workspace, name, color in
                         Task {
                             await presenter.updateWorkspace(
                                 workspace,
-                                newName: newName ?? workspace.name,
-                                newCoverColor: newCoverColor ?? workspace.coverColor
+                                newName: name,
+                                newCoverColor: color
                             )
                             shouldReloadWorkspaces = true
                         }
