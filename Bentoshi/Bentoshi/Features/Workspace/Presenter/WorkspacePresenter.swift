@@ -42,11 +42,7 @@ final class WorkspacePresenter {
         }
     }
     
-    func updateWorkspace(
-        _ workspace: Workspace,
-        newName: String,
-        newCoverColor: WorkspaceColor
-    ) async {
+    func updateWorkspace(_ workspace: Workspace, newName: String, newCoverColor: WorkspaceColor) async {
 
         workspace.name = newName
         workspace.coverColor = newCoverColor
