@@ -24,6 +24,7 @@ final class Artefact {
     var positionY: Int
     
     var bookmark: Data?
+    var workspace: Workspace?
 
     @Relationship(deleteRule: .cascade)
     var searchIndexes: [SearchIndex]

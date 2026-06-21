@@ -10,28 +10,41 @@ import SwiftUI
 struct ArtefactSearchRow: View {
     
     let artefact: Artefact
+    let showWorkspaceName: Bool
     let action: () -> Void
+    
+    init(artefact: Artefact, showWorkspaceName: Bool = false, action: @escaping () -> Void) {
+        self.artefact = artefact
+        self.showWorkspaceName = showWorkspaceName
+        self.action = action
+    }
     
     var body: some View {
         
         Button {
             action()
         } label: {
-            HStack(spacing: 12) {
-                Image(systemName: icon)
-                
+            HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(artefact.name)
-                        .font(.headline)
                     
-                    Text(artefact.type.rawValue)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    if showWorkspaceName, let workspace = artefact.workspace {
+                        Text(workspace.name)
+                            .font(.headline)
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    HStack(spacing: 8) {
+                        Image(systemName: icon)
+                        Text(artefact.name)
+                            .font(.headline)
+                    }
+                    
                 }
+                .padding(10)
                 
                 Spacer()
             }
-            .padding(.vertical, 12)
+            
         }
     }
     
