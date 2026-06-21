@@ -6,12 +6,16 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct HomeView: View {
+    @Query private var workspaces: [Workspace]
     
     @State var presenter: HomePresenter
-    @State private var showModal = false
-    @State private var shouldReloadWorkspaces = false
+    @State private var showWorkspaceForm = false
+    @State private var showWorkspaceDeleteAlert = false
+    @State private var workspaceToUpdate: Workspace?
+    @State private var workspaceToDelete: Workspace?
     @Environment(\.modelContext) private var context
     
     private let columns = [
@@ -28,42 +32,70 @@ struct HomeView: View {
                 LazyVGrid(columns: columns, spacing: 16) {
                     
                     Button {
-                        showModal = true
+                        showWorkspaceForm = true
                     } label: {
                         AddWorkspaceCard()
                     }
                     .buttonStyle(.plain)
                     
-                    ForEach(presenter.workspaces) { workspace in
+                    ForEach(workspaces) { workspace in
                         NavigationLink {
-                            WorkspaceBuilder.build(context: context, workspace: workspace, shouldReloadWorkspace: $shouldReloadWorkspaces)
+                            WorkspaceBuilder.build(context: context, workspace: workspace)
                         } label: {
                             WorkspaceCard(workspace: workspace)
                         }
                         .buttonStyle(.plain)
+                        .contextMenu {
+                            Button("Editar") {
+                                workspaceToUpdate = workspace
+                            }
+                            
+                            Divider()
+                            
+                            Button("Excluir", role: .destructive) {
+                                workspaceToDelete = workspace
+                                showWorkspaceDeleteAlert = true
+                            }
+                        }
                     }
                 }
                 .padding()
             }
             .navigationTitle("Workspaces")
         }
-        .sheet(isPresented: $showModal) {
-            CreateWorkspaceView { workspace, newName, newColor in
+        .sheet(isPresented: $showWorkspaceForm) {
+            WorkspaceFormView(mode: .create) { workspace, _, _ in
                 Task {
                     await presenter.addWorkspace(workspace)
                 }
             }
         }
-        .task {
-            await presenter.listWorkspaces()
-        }
-        .onChange(of: shouldReloadWorkspaces) { oldValue, newValue in
-            if (shouldReloadWorkspaces) {
+        .sheet(item: $workspaceToUpdate) { workspace in
+            WorkspaceFormView(mode: .edit(workspace)) { workspace, name, color in
                 Task {
-                    await presenter.listWorkspaces()
+                    await presenter.updateWorkspace(
+                        workspace,
+                        newName: name,
+                        newCoverColor: color
+                    )
                 }
-                shouldReloadWorkspaces = false
             }
+        }
+        .alert("Excluir workspace?", isPresented: $showWorkspaceDeleteAlert) {
+            Button("Excluir", role: .destructive) {
+                if let workspace = workspaceToDelete {
+                    Task {
+                        await presenter.deleteWorkspace(workspace)
+                    }
+                    workspaceToDelete = nil
+                }
+            }
+
+            Button("Cancelar", role: .cancel) {}
+        } message: {
+            Text(
+                "Tem certeza que deseja excluir \"\(workspaceToDelete?.name ?? "")\"?"
+            )
         }
     }
 }

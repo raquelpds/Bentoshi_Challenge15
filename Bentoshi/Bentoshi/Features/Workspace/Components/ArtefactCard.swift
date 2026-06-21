@@ -15,6 +15,7 @@ struct ArtefactCard: View {
     let action: () -> Void
     let onUpdate: () -> Void
     let onDelete: () -> Void
+    let onRevealInFinder: () -> Void
     
     private var iconName: String {
         switch artefact.type {
@@ -59,6 +60,12 @@ struct ArtefactCard: View {
             
             Button("Editar") {
                 onUpdate()
+            }
+            
+            if artefact.type == .archive {
+                Button("Mostrar no Finder") {
+                    onRevealInFinder()
+                }
             }
             
             Divider()

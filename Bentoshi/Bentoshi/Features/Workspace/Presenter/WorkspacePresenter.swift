@@ -8,51 +8,65 @@
 import SwiftUI
 import SwiftData
 
+enum ArtefactPayload {
+    case archive(url: URL, name: String)
+    case link(url: URL, title: String)
+    case text(title: String, content: String)
+}
+
 @Observable
 final class WorkspacePresenter {
     private let interactor: WorkspaceInteractor
     
     var allWorkspaces: [Workspace] = []
     
-    func loadWorkspaces() async {
-        do {
-            allWorkspaces = try await interactor.fetchAllWorkspaces()
-        } catch {
-            print(error)
-        }
+    
+    init(interactor: WorkspaceInteractor) {
+        self.interactor = interactor
     }
+    
 
     func deleteWorkspace(_ workspace: Workspace) async {
         do {
             try await interactor.deleteWorkspace(id: workspace.id)
-
         } catch {
             print("Erro ao deletar workspace")
         }
     }
     
-    func updateWorkspace(
-        _ workspace: Workspace,
-        newName: String,
-        newCoverColor: WorkspaceColor
-    ) async {
+    func updateWorkspace(_ workspace: Workspace, newName: String, newCoverColor: WorkspaceColor) async {
 
         workspace.name = newName
         workspace.coverColor = newCoverColor
 
         do {
             try await interactor.updateWorkspace()
-            await loadWorkspaces()
         } catch {
             print("Erro ao atualizar workspace")
         }
     }
     
-    init(interactor: WorkspaceInteractor) {
-        self.interactor = interactor
+    func addArtefact(to workspace: Workspace, payload: ArtefactPayload) async {
+        switch payload {
+
+        case .archive(let url, let name):
+            await addArchiveArtefact(
+                to: workspace,
+                archiveUrl: url,
+                withName: name
+            )
+
+        case .link(let url, let name):
+            // await addLinkArtefact(to: workspace, url: url, title: title)
+            break // apagar essa linha depois que implementar
+
+        case .text(let name, let content):
+            // await addTextArtefact(to: workspace, title: title, content: content)
+            break // apagar essa linha depois que implementar
+        }
     }
     
-    func addFileArtefactType(at workspace: Workspace, archiveUrl: URL, withName name: String) async {
+    func addArchiveArtefact(to workspace: Workspace, archiveUrl: URL, withName name: String) async {
         do {
             let bookmark = try archiveUrl.bookmarkData(
                 options: [.withSecurityScope],
@@ -65,9 +79,23 @@ final class WorkspacePresenter {
             workspace.artefacts.append(artefact)
             
             try await interactor.updateWorkspace()
-            await loadWorkspaces()
         } catch {
             print(error)
+        }
+    }
+    
+    func open(_ artefact: Artefact) {
+        switch artefact.type {
+        case .archive:
+            openArchive(artefact)
+
+        case .link:
+            // openLink(artefact)
+            break // apagar essa linha depois que implementar
+
+        case .text:
+            // openTextEditor(artefact)
+            break // apagar essa linha depois que implementar
         }
     }
     
@@ -88,7 +116,6 @@ final class WorkspacePresenter {
     func deleteArtefact(_ artefact: Artefact, from workspace: Workspace) async {
         do {
             try await interactor.deleteArtefact(id: artefact.id, from: workspace)
-            await loadWorkspaces()
         } catch {
             print("Erro ao deletar artefato: \(error)")
         }
@@ -104,10 +131,23 @@ final class WorkspacePresenter {
             )
 
             try await interactor.updateWorkspace()
-            await loadWorkspaces()
 
         } catch {
             print("Erro ao atualizar arquivo: \(error)")
         }
+    }
+    
+    func revealArchiveInFinder(_ artefact: Artefact) {
+        guard let url = artefact.archiveUrl else { return }
+
+        let accessing = url.startAccessingSecurityScopedResource()
+
+        defer {
+            if accessing {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        NSWorkspace.shared.activateFileViewerSelecting([url])
     }
 }
