@@ -14,12 +14,13 @@ enum WorkspaceBuilder {
     static func build(context: ModelContext, workspace: Workspace) -> WorkspaceView {
 
         let workspaceService: WorkspaceServiceProtocol = WorkspaceService(context: context)
-        
         let artefactService: ArtefactServiceProtocol = ArtefactService(context: context)
+        let searchIndexService: SearchIndexServiceProtocol = SearchIndexService(context: context)
 
         let interactor = WorkspaceInteractor(
             workspaceService: workspaceService,
-            artefactService: artefactService
+            artefactService: artefactService,
+            searchIndexService: searchIndexService
         )
 
         let presenter = WorkspacePresenter(

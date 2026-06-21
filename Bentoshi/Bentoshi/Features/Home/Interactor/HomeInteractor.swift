@@ -10,16 +10,19 @@ import SwiftData
 final class HomeInteractor {
     
     private let workspaceService: WorkspaceServiceProtocol
+    private let searchIndexService: SearchIndexServiceProtocol
     
-    init(workspaceService: WorkspaceServiceProtocol) {
+    init(workspaceService: WorkspaceServiceProtocol, searchIndexService: SearchIndexServiceProtocol) {
         self.workspaceService = workspaceService
+        self.searchIndexService = searchIndexService
     }
     
-    func fetchAllWorkspaces() async throws -> [Workspace] {
-        return try workspaceService.fetchAll()
-    }
-    
-    func updateWorkspace() async throws {
+    func updateWorkspace(_ workspace: Workspace) async throws {
+        
+        try searchIndexService.deleteAutomaticIndexes(indexes: workspace.searchIndexes)
+        
+        workspace.rebuildSearchIndexes()
+        
         try workspaceService.update()
     }
     
@@ -31,6 +34,8 @@ final class HomeInteractor {
         try workspaceService.delete(id: id)
     }
     
-    
+    func search(text: String) async throws -> [SearchIndex] {
+        return try searchIndexService.globalSearch(text)
+    }
     
 }

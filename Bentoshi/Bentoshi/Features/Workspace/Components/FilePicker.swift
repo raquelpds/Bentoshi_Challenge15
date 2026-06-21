@@ -17,7 +17,6 @@ struct FilePicker: View {
             switch self {
             case .create:
                 return "Adicionar arquivo"
-                
             case .edit:
                 return "Atualizar arquivo"
             }
@@ -27,9 +26,8 @@ struct FilePicker: View {
             switch self {
             case .create:
                 return nil
-                
             case .edit:
-                return "Escolha um novo arquivo para substituir a referência atual."
+                return "Altere o nome ou escolha um novo arquivo para substituir a referência atual."
             }
         }
         
@@ -37,10 +35,26 @@ struct FilePicker: View {
             switch self {
             case .create:
                 return ""
-                
             case .edit(let artefact):
                 return artefact.name
             }
+        }
+        
+        var currentFileUrl: URL? {
+            switch self {
+            case .create:
+                return nil
+            case .edit(let artefact):
+                return artefact.archiveUrl
+            }
+        }
+        
+        var isEditing: Bool {
+            if case .edit = self {
+                return true
+            }
+            
+            return false
         }
     }
     
@@ -85,6 +99,10 @@ struct FilePicker: View {
 
 private extension FilePicker {
     
+    var selectedOrCurrentFileUrl: URL? {
+        fileUrl ?? mode.currentFileUrl
+    }
+    
     var header: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(mode.title)
@@ -103,6 +121,8 @@ private extension FilePicker {
         VStack {
             if let fileUrl {
                 selectedFileView(fileUrl)
+            } else if let currentUrl = mode.currentFileUrl {
+                currentFileView(currentUrl)
             } else {
                 emptyDropZoneView
             }
@@ -112,30 +132,45 @@ private extension FilePicker {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 18)
-                .fill(
-                    Color.secondary.opacity(0.3)
-                )
+                .fill(Color.secondary.opacity(0.3))
         )
         .overlay {
             RoundedRectangle(cornerRadius: 18)
                 .stroke(
                     dropZoneStrokeColor,
-                    style: StrokeStyle(
-                        lineWidth:  2,
-                        dash: [8]
-                    )
+                    style: StrokeStyle(lineWidth: 2, dash: [8])
                 )
         }
         .animation(.easeInOut(duration: 0.2), value: isHovering)
     }
     
+    func currentFileView(_ fileUrl: URL) -> some View {
+        VStack(spacing: 14) {
+            Image(systemName: "doc.fill")
+                .font(.system(size: 54))
+                .foregroundStyle(.secondary)
+            
+            Text(fileUrl.lastPathComponent)
+                .font(.headline)
+            
+            Text("Arquivo atual mantido")
+                .foregroundStyle(.secondary)
+                .font(.caption)
+            
+            Button {
+                openFinder()
+            } label: {
+                Label("Substituir arquivo", systemImage: "folder")
+            }
+            .buttonStyle(.borderedProminent)
+        }
+    }
+    
     var emptyDropZoneView: some View {
         VStack(spacing: 14) {
-            Image(systemName: isHovering
-                  ? "arrow.down.doc.fill"
-                  : "tray.and.arrow.down.fill")
-            .font(.system(size: 46))
-            .foregroundStyle(dropZoneIconColor)
+            Image(systemName: isHovering ? "arrow.down.doc.fill" : "tray.and.arrow.down.fill")
+                .font(.system(size: 46))
+                .foregroundStyle(dropZoneIconColor)
             
             Text(emptyDropZoneTitle)
                 .font(.headline)
@@ -185,7 +220,7 @@ private extension FilePicker {
                 Text(fileUrl.lastPathComponent)
                     .font(.headline)
                 
-                Text("Arquivo selecionado")
+                Text("Novo arquivo selecionado")
                     .foregroundStyle(.secondary)
             }
             
@@ -215,48 +250,40 @@ private extension FilePicker {
                 saveFile()
             }
             .buttonStyle(.borderedProminent)
-            .disabled(fileUrl == nil || fileName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .disabled(!canSave)
         }
+    }
+    
+    var canSave: Bool {
+        let trimmedName = fileName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !trimmedName.isEmpty && selectedOrCurrentFileUrl != nil
     }
     
     var dropZoneStrokeColor: Color {
-        if isHovering {
-            return .accentColor
-        }
-        
-        return .secondary.opacity(0.2)
+        isHovering ? .accentColor : .secondary.opacity(0.2)
     }
     
     var dropZoneIconColor: Color {
-        if isHovering {
-            return .accentColor
-        }
-        
-        return .secondary
+        isHovering ? .accentColor : .secondary
     }
     
     var emptyDropZoneTitle: String {
-        if isHovering {
-            return "Solte o arquivo aqui"
-        }
-        
-        return "Arraste seu arquivo para esta área"
+        isHovering ? "Solte o arquivo aqui" : "Arraste seu arquivo para esta área"
     }
     
     func saveFile() {
-        guard let fileUrl else { return }
-        
         let trimmedName = fileName.trimmingCharacters(in: .whitespacesAndNewlines)
         
+        guard let url = selectedOrCurrentFileUrl else { return }
         guard !trimmedName.isEmpty else { return }
         
-        onSave(fileUrl, trimmedName)
+        onSave(url, trimmedName)
         dismiss()
     }
     
     func openFinder() {
         let panel = NSOpenPanel()
-        panel.title =  "Escolher arquivo"
+        panel.title = "Escolher arquivo"
         panel.prompt = "Escolher"
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
@@ -272,20 +299,4 @@ private extension FilePicker {
 
 #Preview("Create") {
     FilePicker(mode: .create) { _, _ in }
-}
-
-#Preview("Edit") {
-    FilePicker(
-        mode: .edit(
-            Artefact(
-                name: "Contrato.pdf",
-                type: .archive,
-                content: "Contrato.pdf",
-                width: 100,
-                height: 100,
-                positionX: 0,
-                positionY: 0
-            )
-        )
-    ) { _, _ in }
 }

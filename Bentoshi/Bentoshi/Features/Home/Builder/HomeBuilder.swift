@@ -13,9 +13,11 @@ enum HomeBuilder {
     static func build(context: ModelContext) -> HomeView {
 
         let workspaceService: WorkspaceServiceProtocol = WorkspaceService(context: context)
+        let searchIndexService: SearchIndexServiceProtocol = SearchIndexService(context: context)
 
         let interactor = HomeInteractor(
-            workspaceService: workspaceService
+            workspaceService: workspaceService,
+            searchIndexService: searchIndexService
         )
 
         let presenter = HomePresenter(

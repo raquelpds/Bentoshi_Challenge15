@@ -16,23 +16,26 @@ final class Artefact {
     var name: String
     var type: ArtefactType
     var content: String
+    var workspaceId: UUID
     
-    var bookmark: Data?
-
     var width: Double
     var height: Double
     var positionX: Int
     var positionY: Int
+    
+    var bookmark: Data?
+    var workspace: Workspace?
 
     @Relationship(deleteRule: .cascade)
     var searchIndexes: [SearchIndex]
 
-    init(name: String, type: ArtefactType, content: String, width: Double, height: Double, positionX: Int, positionY: Int, bookmark: Data? = nil) {
+    init(name: String, type: ArtefactType, content: String, workspaceId: UUID, width: Double, height: Double, positionX: Int, positionY: Int, bookmark: Data? = nil) {
         self.id = UUID()
 
         self.name = name
         self.type = type
         self.content = content
+        self.workspaceId = workspaceId
 
         self.width = width
         self.height = height
@@ -43,7 +46,7 @@ final class Artefact {
 
         self.searchIndexes = []
 
-        rebuildSearchIndexes()
+        rebuildAutomaticSearchIndexes()
     }
 }
 
@@ -113,22 +116,38 @@ extension Artefact {
     }
 }
 
-private extension Artefact {
+extension Artefact {
     
-    func rebuildSearchIndexes() {
-
-        searchIndexes.removeAll()
+    func rebuildAutomaticSearchIndexes() {
+        searchIndexes.removeAll { index in
+            index.source == .automatic
+        }
 
         for keyword in searchableKeywords {
-
             searchIndexes.append(
                 SearchIndex(
                     keyword: keyword,
-                    workspace: nil,
+                    workspaceId: workspaceId,
+                    source: .automatic,
                     artefact: self
                 )
             )
         }
+    }
+    
+    func addManualSearchKeyword(_ keyword: String) {
+        let normalizedKeyword = normalize(keyword)
+
+        guard !normalizedKeyword.isEmpty else { return }
+
+        searchIndexes.append(
+            SearchIndex(
+                keyword: normalizedKeyword,
+                workspaceId: workspaceId,
+                source: .manual,
+                artefact: self
+            )
+        )
     }
 
     func extractKeywords(from values: [String]) -> [String] {

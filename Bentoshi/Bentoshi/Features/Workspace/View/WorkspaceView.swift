@@ -45,7 +45,7 @@ enum WorkspaceAlert: Identifiable {
 struct WorkspaceView: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var workspaces: [Workspace]
-    
+
     @State var presenter: WorkspacePresenter
     @State private var selectedID: Workspace.ID?
     @State private var route: WorkspaceRoute?
@@ -65,29 +65,47 @@ struct WorkspaceView: View {
                     selectedID: $selectedID
                 )
             } detail: {
-                WorkspaceDetailContent(
-                    workspace: current,
-                    presenter: presenter,
-                    route: $route,
-                    alert: $alert
-                )
+                ZStack {
+                    WorkspaceDetailContent(
+                        workspace: current,
+                        presenter: presenter,
+                        route: $route,
+                        alert: $alert
+                    )
+                    .opacity(isSearchActive ? 0 : 1)
+                    .allowsHitTesting(!isSearchActive)
+
+                    WorkspaceSearchContent(
+                        workspace: current,
+                        presenter: presenter
+                    )
+                    .opacity(isSearchActive ? 1 : 0)
+                    .allowsHitTesting(isSearchActive)
+                }
+                .navigationTitle(current.name)
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        SearchToolbarItem(
+                            searchText: $presenter.searchText,
+                            isExpanded: $presenter.isSearchBarExpanded
+                        )
+                    }
+                }
             }
 
             FloatingAddButton { action in
                 switch action {
-
                 case .archive:
                     route = .newArchive
-
                 case .text:
-//                    route = .newText
-                    break // apagar essa linha depois que implementar
-
+                    break
                 case .link:
-//                    route = .newLink
-                    break // apagar essa linha depois que implementar
+                    break
                 }
             }
+        }
+        .onChange(of: presenter.searchText) { _, _ in
+            presenter.onSearchTextChangedOn(current)
         }
         .workspaceSheets(
             route: $route,
@@ -104,6 +122,10 @@ struct WorkspaceView: View {
         .onAppear {
             selectedID = selectedID ?? workspace.id
         }
+    }
+
+    private var isSearchActive: Bool {
+        !presenter.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }
 

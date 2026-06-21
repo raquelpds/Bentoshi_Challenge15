@@ -6,7 +6,7 @@
 //
 
 enum ArtefactType: String, Codable, CaseIterable {
-    case link
-    case archive
-    case text
+    case link = "Link"
+    case archive = "Arquivo"
+    case text = "Texto"
 }

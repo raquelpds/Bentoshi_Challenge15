@@ -18,6 +18,14 @@ enum ArtefactPayload {
 final class WorkspacePresenter {
     private let interactor: WorkspaceInteractor
     
+    var searchedItems: [SearchIndex] = []
+    var searchText: String = ""
+    var isSearching = false
+    var isSearchBarExpanded = false
+
+    private let searchDebouncer = SearchDebouncer()
+    private var searchTask: Task<Void, Never>?
+    
     var allWorkspaces: [Workspace] = []
     
     
@@ -35,12 +43,11 @@ final class WorkspacePresenter {
     }
     
     func updateWorkspace(_ workspace: Workspace, newName: String, newCoverColor: WorkspaceColor) async {
-
-        workspace.name = newName
-        workspace.coverColor = newCoverColor
-
         do {
-            try await interactor.updateWorkspace()
+            workspace.name = newName
+            workspace.coverColor = newCoverColor
+            
+            try await interactor.updateWorkspace(workspace)
         } catch {
             print("Erro ao atualizar workspace")
         }
@@ -74,11 +81,11 @@ final class WorkspacePresenter {
                 relativeTo: nil
             )
             
-            let artefact = Artefact(name: name, type: .archive, content: archiveUrl.lastPathComponent, width: 100, height: 100, positionX: 0, positionY: 0, bookmark: bookmark)
+            let artefact = Artefact(name: name, type: .archive, content: archiveUrl.lastPathComponent, workspaceId: workspace.id, width: 100, height: 100, positionX: 0, positionY: 0, bookmark: bookmark)
             
             workspace.artefacts.append(artefact)
             
-            try await interactor.updateWorkspace()
+            try await interactor.updateWorkspace(workspace)
         } catch {
             print(error)
         }
@@ -103,14 +110,7 @@ final class WorkspacePresenter {
         
         guard let url = artefact.archiveUrl else { return }
         
-        let accessing = url.startAccessingSecurityScopedResource()
-        defer {
-            if accessing {
-                url.stopAccessingSecurityScopedResource()
-            }
-        }
-        
-        NSWorkspace.shared.open(url)
+        SystemLauncher.open(url)
     }
     
     func deleteArtefact(_ artefact: Artefact, from workspace: Workspace) async {
@@ -130,7 +130,7 @@ final class WorkspacePresenter {
                 relativeTo: nil
             )
 
-            try await interactor.updateWorkspace()
+            try await interactor.updateArtefact(artefact)
 
         } catch {
             print("Erro ao atualizar arquivo: \(error)")
@@ -140,14 +140,44 @@ final class WorkspacePresenter {
     func revealArchiveInFinder(_ artefact: Artefact) {
         guard let url = artefact.archiveUrl else { return }
 
-        let accessing = url.startAccessingSecurityScopedResource()
+        SystemLauncher.revealInFinder(url)
+    }
+    
+    func onSearchTextChangedOn(_ workspace: Workspace) {
+        let trimmedText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        defer {
-            if accessing {
-                url.stopAccessingSecurityScopedResource()
-            }
+        guard !trimmedText.isEmpty else {
+            searchedItems = []
+            isSearching = false
+            searchDebouncer.cancel()
+            return
         }
 
-        NSWorkspace.shared.activateFileViewerSelecting([url])
+        searchDebouncer.run {
+            await self.performSearchOn(workspace)
+        }
+    }
+
+    func performSearchOn(_ workspace: Workspace) async {
+        do {
+            guard !Task.isCancelled else { return }
+
+            isSearching = true
+
+            defer {
+                isSearching = false
+            }
+
+            let items = try await interactor.search(workspaceId: workspace.id, text: searchText)
+
+            if !Task.isCancelled {
+                searchedItems = items
+            }
+        } catch is CancellationError {
+            return
+        } catch {
+            print("Erro ao buscar: \(error)")
+            searchedItems = []
+        }
     }
 }
