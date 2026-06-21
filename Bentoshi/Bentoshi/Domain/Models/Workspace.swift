@@ -42,6 +42,7 @@ extension Workspace {
             searchIndexes.append(
                 SearchIndex(
                     keyword: keyword,
+                    workspaceId: self.id,
                     workspace: self
                 )
             )

@@ -16,23 +16,25 @@ final class Artefact {
     var name: String
     var type: ArtefactType
     var content: String
+    var workspaceId: UUID
     
-    var bookmark: Data?
-
     var width: Double
     var height: Double
     var positionX: Int
     var positionY: Int
+    
+    var bookmark: Data?
 
     @Relationship(deleteRule: .cascade)
     var searchIndexes: [SearchIndex]
 
-    init(name: String, type: ArtefactType, content: String, width: Double, height: Double, positionX: Int, positionY: Int, bookmark: Data? = nil) {
+    init(name: String, type: ArtefactType, content: String, workspaceId: UUID, width: Double, height: Double, positionX: Int, positionY: Int, bookmark: Data? = nil) {
         self.id = UUID()
 
         self.name = name
         self.type = type
         self.content = content
+        self.workspaceId = workspaceId
 
         self.width = width
         self.height = height
@@ -124,6 +126,7 @@ private extension Artefact {
             searchIndexes.append(
                 SearchIndex(
                     keyword: keyword,
+                    workspaceId: self.workspaceId,
                     workspace: nil,
                     artefact: self
                 )

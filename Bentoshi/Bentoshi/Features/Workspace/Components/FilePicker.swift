@@ -281,6 +281,7 @@ private extension FilePicker {
                 name: "Contrato.pdf",
                 type: .archive,
                 content: "Contrato.pdf",
+                workspaceId: UUID(),
                 width: 100,
                 height: 100,
                 positionX: 0,

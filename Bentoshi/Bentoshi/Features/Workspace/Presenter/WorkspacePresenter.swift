@@ -74,7 +74,7 @@ final class WorkspacePresenter {
                 relativeTo: nil
             )
             
-            let artefact = Artefact(name: name, type: .archive, content: archiveUrl.lastPathComponent, width: 100, height: 100, positionX: 0, positionY: 0, bookmark: bookmark)
+            let artefact = Artefact(name: name, type: .archive, content: archiveUrl.lastPathComponent, workspaceId: workspace.id, width: 100, height: 100, positionX: 0, positionY: 0, bookmark: bookmark)
             
             workspace.artefacts.append(artefact)
             
