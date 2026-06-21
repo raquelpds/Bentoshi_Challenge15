@@ -30,7 +30,7 @@ struct WorkspaceSheetsModifier: ViewModifier {
                     }
                     
                 case .newArchive:
-                    FilePicker { fileUrl, fileName in
+                    FilePicker(mode: .create) { fileUrl, fileName in
                         Task {
                             await presenter.addArtefact(
                                 to: workspace,
@@ -40,7 +40,7 @@ struct WorkspaceSheetsModifier: ViewModifier {
                     }
                     
                 case .updateArchive(let artefact):
-                    FilePicker { fileUrl, fileName in
+                    FilePicker(mode: .edit(artefact)) { fileUrl, fileName in
                         Task {
                             await presenter.updateArchiveArtefact(
                                 artefact,
