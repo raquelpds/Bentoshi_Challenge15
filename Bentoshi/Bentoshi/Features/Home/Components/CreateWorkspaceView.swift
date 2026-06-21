@@ -10,7 +10,8 @@ import SwiftUI
 struct CreateWorkspaceView: View {
 
     @Environment(\.dismiss) private var dismiss
-
+    @Environment(\.colorScheme) private var colorScheme
+    
     @State private var showError = false
     @State private var workspaceName = ""
     @State private var selectedColor: WorkspaceColor = .gray
@@ -24,10 +25,35 @@ struct CreateWorkspaceView: View {
                 .font(.headline)
                 .fontWeight(.semibold)
    
-            Image("mockup")
-                .resizable()
-                .scaledToFit()
-                .frame(height: 180)
+            HStack(spacing: 10) {
+                RoundedRectangle(cornerRadius: 24)
+                    .foregroundStyle(
+                        ArtefactColorPalette.color(
+                            for: .text,
+                            workspaceBaseColor: selectedColor,
+                            scheme: colorScheme)
+                    )
+                VStack(spacing: 10) {
+                    RoundedRectangle(cornerRadius: 24)
+                        .foregroundStyle(
+                            ArtefactColorPalette.color(
+                                for: .link,
+                                workspaceBaseColor: selectedColor,
+                                scheme: colorScheme)
+                        )
+                        .frame(height: 78)
+                    
+                    RoundedRectangle(cornerRadius: 24)
+                        .foregroundStyle(
+                            ArtefactColorPalette.color(
+                                for: .archive,
+                                workspaceBaseColor: selectedColor,
+                                scheme: colorScheme)
+                        )
+                }
+      
+            }
+            .frame(width: 300, height: 240)
 
             VStack(alignment: .leading, spacing: 6) {
                 Text("Nome")
@@ -91,4 +117,10 @@ extension CreateWorkspaceView {
         dismiss()
     }
     
+}
+
+#Preview {
+    CreateWorkspaceView(){_,_,_ in 
+        //
+    }
 }

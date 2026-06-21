@@ -21,8 +21,6 @@ final class HomePresenter {
     func listWorkspaces() async {
         do {
             workspaces = try await interactor.fetchAllWorkspaces()
-
-            print("TOTAL:", workspaces.count)
         } catch {
             print(error)
         }

@@ -12,6 +12,11 @@ final class WorkspaceInteractor {
     private let workspaceService: WorkspaceServiceProtocol
     private let artefactService: ArtefactServiceProtocol
     
+    init(workspaceService: WorkspaceServiceProtocol, artefactService: ArtefactServiceProtocol) {
+        self.workspaceService = workspaceService
+        self.artefactService = artefactService
+    }
+    
     func fetchAllWorkspaces() async throws -> [Workspace] {
         try workspaceService.fetchAll()
     }
@@ -24,8 +29,12 @@ final class WorkspaceInteractor {
         try workspaceService.update()
     }
     
-    init(workspaceService: WorkspaceServiceProtocol, artefactService: ArtefactServiceProtocol) {
-        self.workspaceService = workspaceService
-        self.artefactService = artefactService
+    func deleteArtefact(id: PersistentIdentifier, from workspace: Workspace) async throws {
+        guard let archiveToDeleteIndex = workspace.artefacts.firstIndex(where: { $0.id == id }) else {
+            return
+        }
+        workspace.artefacts.remove(at: archiveToDeleteIndex)
+        try workspaceService.update()
+        try artefactService.delete(id: id)
     }
 }
