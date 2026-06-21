@@ -12,5 +12,6 @@ protocol SearchIndexServiceProtocol {
     
     func delete(id: PersistentIdentifier) throws
     func globalSearch(_ text: String) throws -> [SearchIndex]
+    func searchArtefactFromWorkspaceWithId(_ id: UUID, text: String) throws -> [SearchIndex]
     
 }

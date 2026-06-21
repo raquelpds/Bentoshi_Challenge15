@@ -18,6 +18,13 @@ enum ArtefactPayload {
 final class WorkspacePresenter {
     private let interactor: WorkspaceInteractor
     
+    var searchedItems: [SearchIndex] = []
+    var searchText: String = ""
+    var isSearching = false
+    var isSearchBarExpanded = false
+
+    private var searchTask: Task<Void, Never>?
+    
     var allWorkspaces: [Workspace] = []
     
     
@@ -129,6 +136,7 @@ final class WorkspacePresenter {
                 includingResourceValuesForKeys: nil,
                 relativeTo: nil
             )
+            artefact.rebuildSearchIndexes()
 
             try await interactor.updateWorkspace()
 
@@ -149,5 +157,48 @@ final class WorkspacePresenter {
         }
 
         NSWorkspace.shared.activateFileViewerSelecting([url])
+    }
+    
+    func onSearchTextChangedOn(_ workspace: Workspace) {
+        searchTask?.cancel()
+
+        let trimmedText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !trimmedText.isEmpty else {
+            searchedItems = []
+            isSearching = false
+            return
+        }
+
+        searchTask = Task {
+            try? await Task.sleep(for: .milliseconds(400))
+
+            if Task.isCancelled { return }
+
+            await performSearchOn(workspace)
+        }
+    }
+
+    func performSearchOn(_ workspace: Workspace) async {
+        do {
+            guard !Task.isCancelled else { return }
+
+            isSearching = true
+
+            defer {
+                isSearching = false
+            }
+
+            let items = try await interactor.search(workspaceId: workspace.id, text: searchText)
+
+            if !Task.isCancelled {
+                searchedItems = items
+            }
+        } catch is CancellationError {
+            return
+        } catch {
+            print("Erro ao buscar: \(error)")
+            searchedItems = []
+        }
     }
 }

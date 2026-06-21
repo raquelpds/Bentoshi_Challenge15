@@ -6,15 +6,18 @@
 //
 
 import SwiftData
+import Foundation
 
 final class WorkspaceInteractor {
     
     private let workspaceService: WorkspaceServiceProtocol
     private let artefactService: ArtefactServiceProtocol
+    private let searchIndexService: SearchIndexServiceProtocol
     
-    init(workspaceService: WorkspaceServiceProtocol, artefactService: ArtefactServiceProtocol) {
+    init(workspaceService: WorkspaceServiceProtocol, artefactService: ArtefactServiceProtocol, searchIndexService: SearchIndexServiceProtocol) {
         self.workspaceService = workspaceService
         self.artefactService = artefactService
+        self.searchIndexService = searchIndexService
     }
     
     func fetchAllWorkspaces() async throws -> [Workspace] {
@@ -36,5 +39,9 @@ final class WorkspaceInteractor {
         workspace.artefacts.remove(at: archiveToDeleteIndex)
         try workspaceService.update()
         try artefactService.delete(id: id)
+    }
+    
+    func search(workspaceId: UUID, text: String) async throws -> [SearchIndex] {
+        return try searchIndexService.searchArtefactFromWorkspaceWithId(workspaceId, text: text)
     }
 }

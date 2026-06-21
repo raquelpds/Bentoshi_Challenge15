@@ -274,19 +274,3 @@ private extension FilePicker {
     FilePicker(mode: .create) { _, _ in }
 }
 
-#Preview("Edit") {
-    FilePicker(
-        mode: .edit(
-            Artefact(
-                name: "Contrato.pdf",
-                type: .archive,
-                content: "Contrato.pdf",
-                workspaceId: UUID(),
-                width: 100,
-                height: 100,
-                positionX: 0,
-                positionY: 0
-            )
-        )
-    ) { _, _ in }
-}

@@ -115,7 +115,7 @@ extension Artefact {
     }
 }
 
-private extension Artefact {
+extension Artefact {
     
     func rebuildSearchIndexes() {
 
