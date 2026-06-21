@@ -17,7 +17,8 @@ final class HomePresenter {
     var searchText: String = ""
     var isSearching = false
     var isSearchBarExpanded = false
-
+    
+    private let searchDebouncer = SearchDebouncer()
     private var searchTask: Task<Void, Never>?
 
     init(interactor: HomeInteractor) {
@@ -50,24 +51,19 @@ final class HomePresenter {
             print("Erro ao atualizar workspace")
         }
     }
-
+    
     func onSearchTextChanged() {
-        searchTask?.cancel()
-
         let trimmedText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !trimmedText.isEmpty else {
             searchedItems = []
             isSearching = false
+            searchDebouncer.cancel()
             return
         }
 
-        searchTask = Task {
-            try? await Task.sleep(for: .milliseconds(400))
-
-            if Task.isCancelled { return }
-
-            await performSearch()
+        searchDebouncer.run {
+            await self.performSearch()
         }
     }
 
@@ -113,13 +109,6 @@ final class HomePresenter {
         
         guard let url = artefact.archiveUrl else { return }
         
-        let accessing = url.startAccessingSecurityScopedResource()
-        defer {
-            if accessing {
-                url.stopAccessingSecurityScopedResource()
-            }
-        }
-        
-        NSWorkspace.shared.open(url)
+        SystemLauncher.open(url)
     }
 }

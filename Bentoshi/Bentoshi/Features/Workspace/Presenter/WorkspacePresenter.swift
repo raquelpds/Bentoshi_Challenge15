@@ -23,6 +23,7 @@ final class WorkspacePresenter {
     var isSearching = false
     var isSearchBarExpanded = false
 
+    private let searchDebouncer = SearchDebouncer()
     private var searchTask: Task<Void, Never>?
     
     var allWorkspaces: [Workspace] = []
@@ -109,14 +110,7 @@ final class WorkspacePresenter {
         
         guard let url = artefact.archiveUrl else { return }
         
-        let accessing = url.startAccessingSecurityScopedResource()
-        defer {
-            if accessing {
-                url.stopAccessingSecurityScopedResource()
-            }
-        }
-        
-        NSWorkspace.shared.open(url)
+        SystemLauncher.open(url)
     }
     
     func deleteArtefact(_ artefact: Artefact, from workspace: Workspace) async {
@@ -146,34 +140,21 @@ final class WorkspacePresenter {
     func revealArchiveInFinder(_ artefact: Artefact) {
         guard let url = artefact.archiveUrl else { return }
 
-        let accessing = url.startAccessingSecurityScopedResource()
-
-        defer {
-            if accessing {
-                url.stopAccessingSecurityScopedResource()
-            }
-        }
-
-        NSWorkspace.shared.activateFileViewerSelecting([url])
+        SystemLauncher.revealInFinder(url)
     }
     
     func onSearchTextChangedOn(_ workspace: Workspace) {
-        searchTask?.cancel()
-
         let trimmedText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !trimmedText.isEmpty else {
             searchedItems = []
             isSearching = false
+            searchDebouncer.cancel()
             return
         }
 
-        searchTask = Task {
-            try? await Task.sleep(for: .milliseconds(400))
-
-            if Task.isCancelled { return }
-
-            await performSearchOn(workspace)
+        searchDebouncer.run {
+            await self.performSearchOn(workspace)
         }
     }
 
