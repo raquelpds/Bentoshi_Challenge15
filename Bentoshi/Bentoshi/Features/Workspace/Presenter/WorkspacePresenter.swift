@@ -42,12 +42,11 @@ final class WorkspacePresenter {
     }
     
     func updateWorkspace(_ workspace: Workspace, newName: String, newCoverColor: WorkspaceColor) async {
-
-        workspace.name = newName
-        workspace.coverColor = newCoverColor
-
         do {
-            try await interactor.updateWorkspace()
+            workspace.name = newName
+            workspace.coverColor = newCoverColor
+            
+            try await interactor.updateWorkspace(workspace)
         } catch {
             print("Erro ao atualizar workspace")
         }
@@ -85,7 +84,7 @@ final class WorkspacePresenter {
             
             workspace.artefacts.append(artefact)
             
-            try await interactor.updateWorkspace()
+            try await interactor.updateWorkspace(workspace)
         } catch {
             print(error)
         }
@@ -136,9 +135,8 @@ final class WorkspacePresenter {
                 includingResourceValuesForKeys: nil,
                 relativeTo: nil
             )
-            artefact.rebuildSearchIndexes()
 
-            try await interactor.updateWorkspace()
+            try await interactor.updateArtefact(artefact)
 
         } catch {
             print("Erro ao atualizar arquivo: \(error)")

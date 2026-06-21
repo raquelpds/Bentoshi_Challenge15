@@ -12,13 +12,19 @@ import Foundation
 final class SearchIndex {
     var id: UUID
     var workspaceId: UUID
+    var source: SearchIndexSource
     var keyword: String
+    
+    @Relationship
     var workspace: Workspace?
+    
+    @Relationship
     var artefact: Artefact?
     
-    init(keyword: String,  workspaceId: UUID, workspace: Workspace? = nil, artefact: Artefact? = nil) {
+    init(keyword: String,  workspaceId: UUID, source: SearchIndexSource = .automatic, workspace: Workspace? = nil, artefact: Artefact? = nil) {
         self.id = UUID()
         self.workspaceId = workspaceId
+        self.source = source
         self.keyword = keyword
         self.workspace = workspace
         self.artefact = artefact

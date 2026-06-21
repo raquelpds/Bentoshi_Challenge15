@@ -33,21 +33,13 @@ struct StorageService<T: PersistentModel>: BaseServiceProtocol {
         try context.save()
     }
     
-    func query(
-        predicate: Predicate<T>? = nil,
-        sortBy: [SortDescriptor<Entity>] = [],
-        fetchLimit: Int? = nil
-    ) throws -> [T] {
-        var descriptor = FetchDescriptor<T>(
-            predicate: predicate,
-            sortBy: sortBy
-        )
-        
-        if let fetchLimit {
-            descriptor.fetchLimit = fetchLimit
+    func query(descriptor: FetchDescriptor<T>? = nil) throws -> [T] {
+        if let descriptor {
+            return try context.fetch(descriptor)
+        } else {
+            let fetchAllDescriptor = FetchDescriptor<T>()
+            return try context.fetch(fetchAllDescriptor)
         }
-        
-        return try context.fetch(descriptor)
     }
     
     func fetchById(

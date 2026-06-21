@@ -17,7 +17,12 @@ final class HomeInteractor {
         self.searchIndexService = searchIndexService
     }
     
-    func updateWorkspace() async throws {
+    func updateWorkspace(_ workspace: Workspace) async throws {
+        
+        try searchIndexService.deleteAutomaticIndexes(indexes: workspace.searchIndexes)
+        
+        workspace.rebuildSearchIndexes()
+        
         try workspaceService.update()
     }
     

@@ -21,6 +21,12 @@ final class SearchIndexService: SearchIndexServiceProtocol {
     func delete(id: PersistentIdentifier) throws {
         try storage.remove(id: id)
     }
+    
+    func deleteAutomaticIndexes(indexes: [SearchIndex]) throws {
+        for index in indexes {
+            try storage.remove(id: index.id)
+        }
+    }
 
     func globalSearch(_ text: String) throws -> [SearchIndex] {
         let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -38,7 +44,7 @@ final class SearchIndexService: SearchIndexServiceProtocol {
             ]
         )
 
-        return try context.fetch(descriptor)
+        return try storage.query(descriptor: descriptor)
     }
     
     func searchArtefactFromWorkspaceWithId(_ id: UUID, text: String) throws -> [SearchIndex] {
@@ -58,6 +64,6 @@ final class SearchIndexService: SearchIndexServiceProtocol {
             ]
         )
 
-        return try context.fetch(descriptor)
+        return try storage.query(descriptor: descriptor)
     }
 }

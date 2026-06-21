@@ -45,7 +45,7 @@ final class Artefact {
 
         self.searchIndexes = []
 
-        rebuildSearchIndexes()
+        rebuildAutomaticSearchIndexes()
     }
 }
 
@@ -117,21 +117,36 @@ extension Artefact {
 
 extension Artefact {
     
-    func rebuildSearchIndexes() {
-
-        searchIndexes.removeAll()
+    func rebuildAutomaticSearchIndexes() {
+        searchIndexes.removeAll { index in
+            index.source == .automatic
+        }
 
         for keyword in searchableKeywords {
-
             searchIndexes.append(
                 SearchIndex(
                     keyword: keyword,
-                    workspaceId: self.workspaceId,
-                    workspace: nil,
+                    workspaceId: workspaceId,
+                    source: .automatic,
                     artefact: self
                 )
             )
         }
+    }
+    
+    func addManualSearchKeyword(_ keyword: String) {
+        let normalizedKeyword = normalize(keyword)
+
+        guard !normalizedKeyword.isEmpty else { return }
+
+        searchIndexes.append(
+            SearchIndex(
+                keyword: normalizedKeyword,
+                workspaceId: workspaceId,
+                source: .manual,
+                artefact: self
+            )
+        )
     }
 
     func extractKeywords(from values: [String]) -> [String] {

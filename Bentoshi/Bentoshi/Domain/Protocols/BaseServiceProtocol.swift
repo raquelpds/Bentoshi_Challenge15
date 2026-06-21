@@ -14,7 +14,7 @@ protocol BaseServiceProtocol {
     func insert(_ entity: Entity) throws
     func remove(id: PersistentIdentifier) throws
     func save() throws
-    func query(predicate: Predicate<Entity>?, sortBy: [SortDescriptor<Entity>], fetchLimit: Int?) throws -> [Entity]
+    func query(descriptor: FetchDescriptor<Entity>?) throws -> [Entity]
     func fetchById(_ id: PersistentIdentifier) throws -> Entity?
     
 }

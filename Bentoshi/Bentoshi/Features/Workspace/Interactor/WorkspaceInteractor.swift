@@ -28,7 +28,20 @@ final class WorkspaceInteractor {
         try workspaceService.delete(id: id)
     }
     
-    func updateWorkspace() async throws {
+    func updateWorkspace(_ workspace: Workspace) async throws {
+        
+        try searchIndexService.deleteAutomaticIndexes(indexes: workspace.searchIndexes)
+        
+        workspace.rebuildSearchIndexes()
+        
+        try workspaceService.update()
+    }
+    
+    func updateArtefact(_ artefact: Artefact) async throws {
+        try searchIndexService.deleteAutomaticIndexes(indexes: artefact.searchIndexes)
+        
+        artefact.rebuildAutomaticSearchIndexes()
+        
         try workspaceService.update()
     }
     

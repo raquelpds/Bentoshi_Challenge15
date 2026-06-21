@@ -43,10 +43,9 @@ final class HomePresenter {
     func updateWorkspace(_ workspace: Workspace, newName: String, newCoverColor: WorkspaceColor) async {
         workspace.name = newName
         workspace.coverColor = newCoverColor
-        workspace.rebuildSearchIndexes()
 
         do {
-            try await interactor.updateWorkspace()
+            try await interactor.updateWorkspace(workspace)
         } catch {
             print("Erro ao atualizar workspace")
         }
