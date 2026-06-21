@@ -12,7 +12,7 @@ enum WorkspaceRoute: Identifiable {
     case editWorkspace
     case newArchive
     case updateArchive(Artefact)
-
+    
     var id: String {
         switch self {
         case .editWorkspace:
@@ -29,7 +29,7 @@ enum WorkspaceAlert: Identifiable {
     case deleteWorkspace
     case deleteArtefact(Artefact)
     case missingArchive(Artefact)
-
+    
     var id: String {
         switch self {
         case .deleteWorkspace:
@@ -45,18 +45,18 @@ enum WorkspaceAlert: Identifiable {
 struct WorkspaceView: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var workspaces: [Workspace]
-
+    
     @State var presenter: WorkspacePresenter
     @State private var selectedID: Workspace.ID?
     @State private var route: WorkspaceRoute?
     @State private var alert: WorkspaceAlert?
-
+    
     let workspace: Workspace
-
+    
     private var current: Workspace {
         workspaces.first { $0.id == selectedID } ?? workspace
     }
-
+    
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             NavigationSplitView {
@@ -74,7 +74,7 @@ struct WorkspaceView: View {
                     )
                     .opacity(isSearchActive ? 0 : 1)
                     .allowsHitTesting(!isSearchActive)
-
+                    
                     WorkspaceSearchContent(
                         workspace: current,
                         presenter: presenter
@@ -90,9 +90,28 @@ struct WorkspaceView: View {
                             isExpanded: $presenter.isSearchBarExpanded
                         )
                     }
+                    
+                    ToolbarItem(placement: .primaryAction) {
+                        Menu {
+                            Button {
+                                route = .editWorkspace
+                            } label: {
+                                Label("Editar", systemImage: "pencil")
+                            }
+                            
+                            Button(role: .destructive) {
+                                alert = .deleteWorkspace
+                            } label: {
+                                Label("Excluir", systemImage: "trash")
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis")
+                        }
+                        .menuIndicator(.hidden)
+                    }
                 }
             }
-
+            
             FloatingAddButton { action in
                 switch action {
                 case .archive:
@@ -123,7 +142,7 @@ struct WorkspaceView: View {
             selectedID = selectedID ?? workspace.id
         }
     }
-
+    
     private var isSearchActive: Bool {
         !presenter.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
@@ -133,10 +152,10 @@ extension WorkspaceView {
     
     private func deleteCurrentWorkspace() {
         let workspaceToDelete = current
-
+        
         Task {
             await presenter.deleteWorkspace(workspaceToDelete)
-
+            
             if let nextWorkspace = workspaces.first {
                 selectedID = nextWorkspace.id
             } else {

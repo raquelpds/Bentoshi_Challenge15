@@ -45,25 +45,5 @@ struct WorkspaceDetailContent: View {
             .padding()
         }
         .navigationTitle(workspace.name)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    Button {
-                        route = .editWorkspace
-                    } label: {
-                        Label("Editar", systemImage: "pencil")
-                    }
-
-                    Button(role: .destructive) {
-                        alert = .deleteWorkspace
-                    } label: {
-                        Label("Excluir", systemImage: "trash")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis")
-                }
-                .menuIndicator(.hidden)
-            }
-        }
     }
 }

@@ -13,9 +13,17 @@ struct HomeView: View {
     
     @State var presenter: HomePresenter
     
+    @AppStorage("sortOption")
+    private var sortOptionRaw: String = SortOption.alphabet.rawValue
+    
+    var sortOption: SortOption {
+        get { SortOption(rawValue: sortOptionRaw) ?? .alphabet }
+        set { sortOptionRaw = newValue.rawValue }
+    }
+    
     var body: some View {
         ZStack {
-            WorkspacesGrid(presenter: presenter)
+            WorkspacesGrid(presenter: presenter, sortOption: sortOption)
                 .opacity(isSearchActive ? 0 : 1)
                 .allowsHitTesting(!isSearchActive)
             
@@ -30,6 +38,25 @@ struct HomeView: View {
                     searchText: $presenter.searchText,
                     isExpanded: $presenter.isSearchBarExpanded
                 )
+            }
+            
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    Button("A a Z") {
+                        sortOptionRaw = SortOption.alphabet.rawValue
+                    }
+                    
+                    Button("Modificado por último") {
+                        sortOptionRaw = SortOption.lastModified.rawValue
+                    }
+                    
+                    Button("Criado por último") {
+                        sortOptionRaw = SortOption.lastCreated.rawValue
+                    }
+                } label: {
+                    Image(systemName: "square.grid.3x1.below.line.grid.1x2")
+                }
+                .menuIndicator(.hidden)
             }
         }
         .onAppear {

@@ -20,6 +20,33 @@ struct WorkspacesGrid: View {
     @State private var workspaceToNavigate: Workspace?
     
     let presenter: HomePresenter
+    let sortOption: SortOption
+    
+    init(presenter: HomePresenter, sortOption: SortOption){
+        
+        self.presenter = presenter
+        self.sortOption = sortOption
+        
+        switch sortOption {
+        case .alphabet:
+            _workspaces = Query(
+                sort: \Workspace.name,
+                order: .forward
+            )
+        
+        case .lastCreated:
+            _workspaces = Query(
+                sort: \Workspace.createdAt,
+                order: .reverse
+            )
+            
+        case .lastModified:
+            _workspaces = Query(
+                sort: \Workspace.updatedAt,
+                order: .reverse
+            )
+        }
+    }
     
     var body: some View {
         ScrollView {
@@ -35,7 +62,7 @@ struct WorkspacesGrid: View {
                     Button {
                         workspaceToNavigate = workspace
                     } label: {
-                        WorkspaceCard(workspace: workspace)
+                        WorkspaceCard(workspace: workspace, sortOption: sortOption)
                     }
                     .buttonStyle(.plain)
                     .contextMenu {

@@ -14,6 +14,8 @@ final class Workspace {
     var id: UUID
     var name: String
     var coverColor: WorkspaceColor
+    var createdAt: Date
+    var updatedAt: Date
     
     @Relationship(deleteRule: .cascade)
     var artefacts: [Artefact]
@@ -23,6 +25,9 @@ final class Workspace {
     
     init(name: String, coverColor: WorkspaceColor = .gray) {
         self.id = UUID()
+        self.createdAt = Date()
+        self.updatedAt = Date()
+        
         self.name = name
         self.artefacts = []
         self.searchIndexes = []
