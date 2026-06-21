@@ -105,7 +105,7 @@ extension Artefact {
 }
 
 extension Artefact {
-    func checkIsMissingFilePath() -> Bool {
+    func checkIsMissingArchivePath() -> Bool {
         guard let url = archiveUrl else { return true }
         return !FileManager.default.fileExists(
             atPath: url.path

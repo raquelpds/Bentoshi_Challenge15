@@ -24,7 +24,11 @@ struct WorkspaceDetailContent: View {
                         artefact: artefact,
                         pallete: workspace.coverColor
                     ) {
-                        presenter.open(artefact)
+                        if artefact.checkIsMissingArchivePath() {
+                            alert = .missingArchive(artefact)
+                        } else {
+                            presenter.open(artefact)
+                        }
                     } onUpdate: {
                         route = .updateArchive(artefact)
                     } onDelete: {
