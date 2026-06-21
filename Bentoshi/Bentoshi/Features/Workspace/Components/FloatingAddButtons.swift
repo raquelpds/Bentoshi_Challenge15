@@ -7,45 +7,52 @@
 
 import SwiftUI
 
+enum AddArtefactAction {
+    case archive
+    case text
+    case link
+}
+
 struct FloatingAddButton: View {
     @State private var isExpanded = false
-    @Binding var showFilePicker: Bool
+
+    let onAction: (AddArtefactAction) -> Void
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            VStack(spacing: 12) {
-                if isExpanded {
-                    floatingButton(systemImage: "archivebox") {
-                        showFilePicker = true
-                    }
+        VStack(spacing: 12) {
 
-                    floatingButton(systemImage: "textformat.characters") {
-                        //
-                    }
+            if isExpanded {
 
-                    floatingButton(systemImage: "link") {
-                        //
-                    }
+                floatingButton(systemImage: "archivebox") {
+                    onAction(.archive)
                 }
 
-                Button {
-                    isExpanded.toggle()
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.largeTitle)
-                        .frame(width: 60, height: 60)
-                        .background(.blue)
-                        .foregroundStyle(.white)
-                        .clipShape(Circle())
-                        .shadow(radius: 6)
+                floatingButton(systemImage: "textformat.characters") {
+                    onAction(.text)
                 }
-                .buttonStyle(.plain)
+
+                floatingButton(systemImage: "link") {
+                    onAction(.link)
+                }
             }
-            .padding(24)
-            .onHover { hovering in
-                withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
-                    isExpanded = hovering
-                }
+
+            Button {
+                isExpanded.toggle()
+            } label: {
+                Image(systemName: "plus")
+                    .font(.largeTitle)
+                    .frame(width: 60, height: 60)
+                    .background(.blue)
+                    .foregroundStyle(.white)
+                    .clipShape(Circle())
+                    .shadow(radius: 6)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(24)
+        .onHover { hovering in
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                isExpanded = hovering
             }
         }
     }

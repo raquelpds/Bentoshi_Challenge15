@@ -8,11 +8,22 @@
 import SwiftUI
 import SwiftData
 
+enum ArtefactPayload {
+    case archive(url: URL, name: String)
+    case link(url: URL, title: String)
+    case text(title: String, content: String)
+}
+
 @Observable
 final class WorkspacePresenter {
     private let interactor: WorkspaceInteractor
     
     var allWorkspaces: [Workspace] = []
+    
+    
+    init(interactor: WorkspaceInteractor) {
+        self.interactor = interactor
+    }
     
     func loadWorkspaces() async {
         do {
@@ -48,11 +59,27 @@ final class WorkspacePresenter {
         }
     }
     
-    init(interactor: WorkspaceInteractor) {
-        self.interactor = interactor
+    func addArtefact(to workspace: Workspace, payload: ArtefactPayload) async {
+        switch payload {
+
+        case .archive(let url, let name):
+            await addArchiveArtefact(
+                to: workspace,
+                archiveUrl: url,
+                withName: name
+            )
+
+        case .link(let url, let name):
+            // await addLinkArtefact(to: workspace, url: url, title: title)
+            break // apagar essa linha depois que implementar
+
+        case .text(let name, let content):
+            // await addTextArtefact(to: workspace, title: title, content: content)
+            break // apagar essa linha depois que implementar
+        }
     }
     
-    func addFileArtefactType(at workspace: Workspace, archiveUrl: URL, withName name: String) async {
+    func addArchiveArtefact(to workspace: Workspace, archiveUrl: URL, withName name: String) async {
         do {
             let bookmark = try archiveUrl.bookmarkData(
                 options: [.withSecurityScope],
@@ -68,6 +95,21 @@ final class WorkspacePresenter {
             await loadWorkspaces()
         } catch {
             print(error)
+        }
+    }
+    
+    func open(_ artefact: Artefact) {
+        switch artefact.type {
+        case .archive:
+            openArchive(artefact)
+
+        case .link:
+            // openLink(artefact)
+            break // apagar essa linha depois que implementar
+
+        case .text:
+            // openTextEditor(artefact)
+            break // apagar essa linha depois que implementar
         }
     }
     
