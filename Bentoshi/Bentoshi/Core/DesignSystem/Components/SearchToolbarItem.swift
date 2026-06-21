@@ -35,7 +35,6 @@ struct SearchToolbarItem: View {
             height: 30,
             alignment: .leading
         )
-        .background(.quaternary)
         .clipShape(Capsule())
         .contentShape(Capsule())
         .overlay(alignment: .trailing) {
