@@ -50,7 +50,7 @@ struct WorkspacesGrid: View {
     
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: columns, spacing: 16) {
+            LazyVGrid(columns: columns, spacing: 32) {
                 Button {
                     showWorkspaceForm = true
                 } label: {
@@ -124,9 +124,9 @@ struct WorkspacesGrid: View {
     }
     
     private let columns = [
-        GridItem(.flexible(), spacing: 16),
-        GridItem(.flexible(), spacing: 16),
-        GridItem(.flexible(), spacing: 16),
-        GridItem(.flexible(), spacing: 16)
+        GridItem(.flexible(), spacing: 32),
+        GridItem(.flexible(), spacing: 32),
+        GridItem(.flexible(), spacing: 32),
+        GridItem(.flexible(), spacing: 32)
     ]
 }

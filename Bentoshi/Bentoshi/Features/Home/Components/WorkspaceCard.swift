@@ -14,8 +14,11 @@ struct WorkspaceCard: View {
     let sortOption: SortOption
     
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 12) {
             WorkspaceColorPalette.color(for: workspace.coverColor, scheme: colorScheme)
+                .frame(maxWidth: .infinity)
+                .frame(height: 230)
+                .clipShape(RoundedRectangle(cornerRadius: 35))
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
@@ -31,12 +34,9 @@ struct WorkspaceCard: View {
                     .fontWeight(.semibold)
                     .foregroundStyle(.secondary)
             }
-            .padding()
-            .background(Color.gray.opacity(0.15))
+            .padding(.horizontal, 4)
         }
-        .aspectRatio(453.0 / 314.0, contentMode: .fit)
         .frame(maxWidth: .infinity)
-        .clipShape(RoundedRectangle(cornerRadius: 24))
     }
     
     private var dateText: String {

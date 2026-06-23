@@ -9,16 +9,21 @@ import SwiftUI
 
 struct AddWorkspaceCard: View {
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 24)
-                .fill(Color.gray.opacity(0.15))
+        VStack {
+            ZStack {
+                RoundedRectangle(cornerRadius: 35)
+                    .fill(Color.neutralColor1)
 
-            Image(systemName: "plus")
-                .font(.system(size: 44, weight: .bold))
-                .foregroundColor(.black)
+                Image(systemName: "plus")
+                    .font(.system(size: 44, weight: .bold))
+                    .foregroundStyle(.black)
+            }
+            .frame(height: 230)
+            
+            Spacer()
         }
-        .aspectRatio(453.0 / 314.0, contentMode: .fit)
         .frame(maxWidth: .infinity)
+
     }
 }
 
