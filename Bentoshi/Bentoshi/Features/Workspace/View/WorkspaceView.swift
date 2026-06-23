@@ -67,9 +67,37 @@ struct WorkspaceView: View {
     @State private var alert: WorkspaceAlert?
     
     let workspace: Workspace
+    let sortOption: SortOption
     
     private var current: Workspace {
         workspaces.first { $0.id == selectedID } ?? workspace
+    }
+    
+    init(presenter: WorkspacePresenter, sortOption: SortOption, workspace: Workspace){
+        
+        self.presenter = presenter
+        self.sortOption = sortOption
+        self.workspace = workspace
+        
+        switch sortOption {
+        case .alphabet:
+            _workspaces = Query(
+                sort: \Workspace.normalizedName,
+                order: .forward
+            )
+        
+        case .lastCreated:
+            _workspaces = Query(
+                sort: \Workspace.createdAt,
+                order: .reverse
+            )
+            
+        case .lastModified:
+            _workspaces = Query(
+                sort: \Workspace.updatedAt,
+                order: .reverse
+            )
+        }
     }
     
     var body: some View {
@@ -186,7 +214,7 @@ extension WorkspaceView {
     struct PreviewWithContextWrapper: View {
         @Environment(\.modelContext) private var context
         var body: some View {
-            WorkspaceBuilder.build(context: context, workspace: Workspace(name: "Teste"))
+            WorkspaceBuilder.build(context: context, sortOption: .alphabet,workspace: Workspace(name: "Teste"))
         }
     }
     

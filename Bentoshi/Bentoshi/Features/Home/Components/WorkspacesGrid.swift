@@ -30,7 +30,7 @@ struct WorkspacesGrid: View {
         switch sortOption {
         case .alphabet:
             _workspaces = Query(
-                sort: \Workspace.name,
+                sort: \Workspace.normalizedName,
                 order: .forward
             )
         
@@ -117,12 +117,14 @@ struct WorkspacesGrid: View {
         .navigationDestination(item: $workspaceToNavigate) { workspace in
             WorkspaceBuilder.build(
                 context: context,
+                sortOption: sortOption,
                 workspace: workspace
             )
         }
     }
     
     private let columns = [
+        GridItem(.flexible(), spacing: 16),
         GridItem(.flexible(), spacing: 16),
         GridItem(.flexible(), spacing: 16),
         GridItem(.flexible(), spacing: 16)

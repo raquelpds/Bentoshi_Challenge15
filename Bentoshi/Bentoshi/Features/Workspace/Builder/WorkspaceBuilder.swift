@@ -11,7 +11,7 @@ import SwiftUI
 enum WorkspaceBuilder {
 
     @MainActor
-    static func build(context: ModelContext, workspace: Workspace) -> WorkspaceView {
+    static func build(context: ModelContext, sortOption: SortOption, workspace: Workspace) -> WorkspaceView {
 
         let workspaceService: WorkspaceServiceProtocol = WorkspaceService(context: context)
         let artefactService: ArtefactServiceProtocol = ArtefactService(context: context)
@@ -29,6 +29,7 @@ enum WorkspaceBuilder {
 
         return WorkspaceView(
             presenter: presenter,
+            sortOption: sortOption,
             workspace: workspace
         )
     }

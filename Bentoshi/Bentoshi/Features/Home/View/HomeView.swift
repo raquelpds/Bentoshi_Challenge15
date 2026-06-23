@@ -17,7 +17,7 @@ struct HomeView: View {
     private var sortOptionRaw: String = SortOption.alphabet.rawValue
     
     var sortOption: SortOption {
-        get { SortOption(rawValue: sortOptionRaw) ?? .alphabet }
+        get { SortOption(rawValue: sortOptionRaw) ?? .lastModified }
         set { sortOptionRaw = newValue.rawValue }
     }
     
@@ -27,7 +27,7 @@ struct HomeView: View {
                 .opacity(isSearchActive ? 0 : 1)
                 .allowsHitTesting(!isSearchActive)
             
-            GlobalSearchContent(presenter: presenter)
+            GlobalSearchContent(presenter: presenter, sortOption: sortOption)
                 .opacity(isSearchActive ? 1 : 0)
                 .allowsHitTesting(isSearchActive)
         }
@@ -42,16 +42,37 @@ struct HomeView: View {
             
             ToolbarItem(placement: .primaryAction) {
                 Menu {
-                    Button("A a Z") {
+                    Button{
                         sortOptionRaw = SortOption.alphabet.rawValue
+                    } label: {
+                        HStack(spacing: 4) {
+                            if sortOption == .alphabet {
+                                Image(systemName: "checkmark")
+                            }
+                            Text("A a Z")
+                        }
                     }
                     
-                    Button("Modificado por último") {
+                    Button {
                         sortOptionRaw = SortOption.lastModified.rawValue
+                    } label: {
+                        HStack(spacing: 4) {
+                            if sortOption == .lastModified {
+                                Image(systemName: "checkmark")
+                            }
+                            Text("Modificado por último")
+                        }
                     }
                     
-                    Button("Criado por último") {
+                    Button{
                         sortOptionRaw = SortOption.lastCreated.rawValue
+                    } label: {
+                        HStack(spacing: 4) {
+                            if sortOption == .lastCreated {
+                                Image(systemName: "checkmark")
+                            }
+                            Text("Criado por último")
+                        }
                     }
                 } label: {
                     Image(systemName: "square.grid.3x1.below.line.grid.1x2")
