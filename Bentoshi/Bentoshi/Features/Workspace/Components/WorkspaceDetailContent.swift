@@ -24,7 +24,7 @@ struct WorkspaceDetailContent: View {
                         artefact: artefact,
                         pallete: workspace.coverColor
                     ) {
-                        if artefact.checkIsMissingArchivePath() {
+                        if artefact.type == .archive && artefact.checkIsMissingArchivePath() {
                             alert = .missingArchive(artefact)
                         } else {
                             presenter.open(artefact)

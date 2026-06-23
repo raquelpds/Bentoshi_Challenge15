@@ -10,7 +10,7 @@ import SwiftData
 
 enum ArtefactPayload {
     case archive(url: URL, name: String)
-    case link(url: URL, title: String)
+    case link(url: String, title: String)
     case text(title: String, content: String)
 }
 
