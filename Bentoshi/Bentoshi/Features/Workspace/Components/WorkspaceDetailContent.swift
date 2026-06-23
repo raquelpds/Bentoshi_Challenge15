@@ -12,7 +12,7 @@ struct WorkspaceDetailContent: View {
     let presenter: WorkspacePresenter
     @Binding var route: WorkspaceRoute?
     @Binding var alert: WorkspaceAlert?
-
+    
     var body: some View {
         ScrollView {
             LazyVGrid(
@@ -24,13 +24,11 @@ struct WorkspaceDetailContent: View {
                         artefact: artefact,
                         pallete: workspace.coverColor
                     ) {
-                        if artefact.type == .archive && artefact.checkIsMissingArchivePath() {
-                            alert = .missingArchive(artefact)
-                        } else {
+                        if (isValid(artefact)){
                             presenter.open(artefact)
                         }
                     } onUpdate: {
-                        route = .updateArchive(artefact)
+                        handleUpdate(artefact: artefact)
                     } onDelete: {
                         alert = .deleteArtefact(artefact)
                     } onRevealInFinder: {
@@ -45,5 +43,30 @@ struct WorkspaceDetailContent: View {
             .padding()
         }
         .navigationTitle(workspace.name)
+    }
+    
+    private func isValid(_ artefact: Artefact) -> Bool {
+        if artefact.type == .archive && artefact.checkIsMissingArchivePath() {
+            alert = .missingArchive(artefact)
+            return false
+        }
+        
+        if artefact.type == .link && !artefact.checkIsLinkValid() {
+            alert = .invalidLink(artefact)
+            return false
+        }
+        
+        return true
+    }
+    
+    private func handleUpdate(artefact: Artefact){
+        switch artefact.type {
+        case .archive:
+            route = .updateArchive(artefact)
+        case .link:
+            route = .updateLink(artefact)
+        case .text:
+            break
+        }
     }
 }

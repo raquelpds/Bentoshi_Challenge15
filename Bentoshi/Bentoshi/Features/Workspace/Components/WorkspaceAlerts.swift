@@ -10,16 +10,16 @@ import SwiftUI
 struct WorkspaceAlertsModifier: ViewModifier {
     @Binding var alert: WorkspaceAlert?
     @Binding var route: WorkspaceRoute?
-
+    
     let workspace: Workspace
     let presenter: WorkspacePresenter
     let onDeleteWorkspace: () -> Void
-
+    
     func body(content: Content) -> some View {
         content
             .alert(item: $alert) { alert in
                 switch alert {
-
+                    
                 case .deleteWorkspace:
                     Alert(
                         title: Text("Excluir workspace?"),
@@ -28,7 +28,7 @@ struct WorkspaceAlertsModifier: ViewModifier {
                         },
                         secondaryButton: .cancel()
                     )
-
+                    
                 case .deleteArtefact(let artefact):
                     Alert(
                         title: Text("Excluir artefato?"),
@@ -40,10 +40,24 @@ struct WorkspaceAlertsModifier: ViewModifier {
                         },
                         secondaryButton: .cancel()
                     )
-
+                    
                 case .missingArchive(let artefact):
                     Alert(
                         title: Text("Arquivo não encontrado"),
+                        message: Text(artefact.name),
+                        primaryButton: .default(Text("Atualizar")) {
+                            route = .updateArchive(artefact)
+                        },
+                        secondaryButton: .destructive(Text("Excluir")) {
+                            Task {
+                                await presenter.deleteArtefact(artefact, from: workspace)
+                            }
+                        }
+                    )
+                    
+                case .invalidLink(let artefact):
+                    Alert(
+                        title: Text("Url inválida"),
                         message: Text(artefact.name),
                         primaryButton: .default(Text("Atualizar")) {
                             route = .updateArchive(artefact)

@@ -11,7 +11,9 @@ import SwiftData
 enum WorkspaceRoute: Identifiable {
     case editWorkspace
     case newArchive
+    case newLink
     case updateArchive(Artefact)
+    case updateLink(Artefact)
     
     var id: String {
         switch self {
@@ -19,8 +21,12 @@ enum WorkspaceRoute: Identifiable {
             "editWorkspace"
         case .newArchive:
             "newArchive"
+        case .newLink:
+            "newLink"
         case .updateArchive(let artefact):
             "updateArchive-\(artefact.id)"
+        case .updateLink(let artefact):
+            "updateLink-\(artefact.id)"
         }
     }
 }
@@ -29,6 +35,7 @@ enum WorkspaceAlert: Identifiable {
     case deleteWorkspace
     case deleteArtefact(Artefact)
     case missingArchive(Artefact)
+    case invalidLink(Artefact)
     
     var id: String {
         switch self {
@@ -38,6 +45,8 @@ enum WorkspaceAlert: Identifiable {
             "deleteArtefact-\(artefact.id)"
         case .missingArchive(let artefact):
             "missingArchive-\(artefact.id)"
+        case .invalidLink(let artefact):
+            "invalidLink-\(artefact.id)"
         }
     }
 }
@@ -119,7 +128,7 @@ struct WorkspaceView: View {
                 case .text:
                     break
                 case .link:
-                    break
+                    route = .newLink
                 }
             }
         }
