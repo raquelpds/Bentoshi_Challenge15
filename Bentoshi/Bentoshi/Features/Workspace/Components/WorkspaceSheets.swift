@@ -36,18 +36,43 @@ struct WorkspaceSheetsModifier: ViewModifier {
                             )
                         }
                     }
+                
+                case .newLink:
+                    LinkFormSheet(mode: .create) { url, name in
+                        Task {
+                            await presenter.addArtefact(
+                                to: workspace,
+                                payload: .link(url: url, name: name)
+                            )
+                        }
+                    }
                     
                 case .updateArchive(let artefact):
                     FilePicker(mode: .edit(artefact)) { fileUrl, fileName in
                         Task {
-                            await presenter.updateArchiveArtefact(
+                            await presenter.updateArtefact(
                                 artefact,
-                                newURL: fileUrl,
-                                newName: fileName
+                                payload: .archive(
+                                    newURL: fileUrl,
+                                    newName: fileName
+                                )
                             )
                         }
                     }
+                
+            case .updateLink(let artefact):
+                LinkFormSheet(mode: .edit(artefact)) { url, name in
+                    Task {
+                        await presenter.updateArtefact(
+                            artefact,
+                            payload: .link(
+                                newURL: url,
+                                newName: name
+                            )
+                        )
+                    }
                 }
+            }
             }
     }
 }

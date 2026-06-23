@@ -109,6 +109,10 @@ extension Artefact {
 
         return resolvedUrl
     }
+    
+    var linkUrl: URL? {
+        return URL(string: content)
+    }
 }
 
 extension Artefact {
@@ -117,6 +121,14 @@ extension Artefact {
         return !FileManager.default.fileExists(
             atPath: url.path
         )
+    }
+    
+    func checkIsLinkValid() -> Bool {
+        if linkUrl != nil {
+            return true
+        }
+        
+        return false
     }
 }
 

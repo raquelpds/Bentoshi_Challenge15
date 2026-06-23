@@ -8,10 +8,16 @@
 import SwiftUI
 import SwiftData
 
-enum ArtefactPayload {
+enum ArtefactCreatePayload {
     case archive(url: URL, name: String)
-    case link(url: String, title: String)
+    case link(url: String, name: String)
     case text(title: String, content: String)
+}
+
+enum ArtefactUpdatePayload {
+    case archive(newURL: URL, newName: String)
+    case link(newURL: String, newName: String)
+    case text(newTitle: String, newContent: String)
 }
 
 @Observable
@@ -53,7 +59,7 @@ final class WorkspacePresenter {
         }
     }
     
-    func addArtefact(to workspace: Workspace, payload: ArtefactPayload) async {
+    func addArtefact(to workspace: Workspace, payload: ArtefactCreatePayload) async {
         switch payload {
 
         case .archive(let url, let name):
@@ -64,8 +70,11 @@ final class WorkspacePresenter {
             )
 
         case .link(let url, let name):
-            // await addLinkArtefact(to: workspace, url: url, title: title)
-            break // apagar essa linha depois que implementar
+            await addLinkArtefact(
+                to: workspace,
+                url: url,
+                withName: name
+            )
 
         case .text(let name, let content):
             // await addTextArtefact(to: workspace, title: title, content: content)
@@ -81,7 +90,17 @@ final class WorkspacePresenter {
                 relativeTo: nil
             )
             
-            let artefact = Artefact(name: name, type: .archive, content: archiveUrl.lastPathComponent, workspaceId: workspace.id, width: 100, height: 100, positionX: 0, positionY: 0, bookmark: bookmark)
+            let artefact = Artefact(
+                name: name,
+                type: .archive,
+                content: archiveUrl.lastPathComponent,
+                workspaceId: workspace.id,
+                width: 100,
+                height: 100,
+                positionX: 0,
+                positionY: 0,
+                bookmark: bookmark
+            )
             
             workspace.artefacts.append(artefact)
             
@@ -91,14 +110,84 @@ final class WorkspacePresenter {
         }
     }
     
+    func addLinkArtefact(to workspace: Workspace, url: String, withName name: String) async {
+        do {
+            let artefact = Artefact(
+                name: name,
+                type: .link,
+                content: url,
+                workspaceId: workspace.id,
+                width: 200,
+                height: 100,
+                positionX: 0,
+                positionY: 0,
+            )
+            
+            workspace.artefacts.append(artefact)
+            
+            try await interactor.updateWorkspace(workspace)
+        } catch {
+            print(error)
+        }
+    }
+    
+    func updateArtefact(_ artefact: Artefact, payload: ArtefactUpdatePayload) async{
+        switch payload {
+
+        case .archive(let newUrl, let newName):
+            await updateArchiveArtefact(
+                artefact,
+                newUrl: newUrl,
+                newName: newName
+            )
+
+        case .link(let newUrl, let newName):
+            await updateLinkArtefact(
+                artefact,
+                newUrl: newUrl,
+                newName: newName
+            )
+
+        case .text(let name, let content):
+            // await addTextArtefact(to: workspace, title: title, content: content)
+            break // apagar essa linha depois que implementar
+        }
+    }
+    
+    func updateArchiveArtefact(_ artefact: Artefact, newUrl: URL, newName: String) async {
+        do {
+            artefact.name = newName
+            artefact.bookmark = try newUrl.bookmarkData(
+                options: [.withSecurityScope],
+                includingResourceValuesForKeys: nil,
+                relativeTo: nil
+            )
+
+            try await interactor.updateArtefact(artefact)
+
+        } catch {
+            print("Erro ao atualizar arquivo: \(error)")
+        }
+    }
+    
+    func updateLinkArtefact(_ artefact: Artefact, newUrl: String, newName: String) async {
+        do {
+            artefact.name = newName
+            artefact.content = newUrl
+            try await interactor.updateArtefact(artefact)
+
+        } catch {
+            print("Erro ao atualizar arquivo: \(error)")
+        }
+    }
+    
     func open(_ artefact: Artefact) {
         switch artefact.type {
         case .archive:
             openArchive(artefact)
 
         case .link:
-            // openLink(artefact)
-            break // apagar essa linha depois que implementar
+            openLink(artefact)
 
         case .text:
             // openTextEditor(artefact)
@@ -113,27 +202,18 @@ final class WorkspacePresenter {
         SystemLauncher.open(url)
     }
     
+    func openLink(_ artefact: Artefact){
+        guard let url = artefact.linkUrl else { return }
+        
+        SystemLauncher.open(url)
+        
+    }
+    
     func deleteArtefact(_ artefact: Artefact, from workspace: Workspace) async {
         do {
             try await interactor.deleteArtefact(id: artefact.id, from: workspace)
         } catch {
             print("Erro ao deletar artefato: \(error)")
-        }
-    }
-    
-    func updateArchiveArtefact(_ artefact: Artefact, newURL: URL, newName: String) async {
-        do {
-            artefact.name = newName
-            artefact.bookmark = try newURL.bookmarkData(
-                options: [.withSecurityScope],
-                includingResourceValuesForKeys: nil,
-                relativeTo: nil
-            )
-
-            try await interactor.updateArtefact(artefact)
-
-        } catch {
-            print("Erro ao atualizar arquivo: \(error)")
         }
     }
     
