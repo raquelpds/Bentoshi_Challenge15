@@ -16,7 +16,7 @@ final class MenuBarPresenter {
         self.interactor = interactor
     }
     
-    func addArtefact(to workspace: Workspace, payload: ArtefactPayload) async {
+    func addArtefact(to workspace: Workspace, payload: ArtefactCreatePayload) async {
         switch payload {
 
         case .archive(let url, let name):

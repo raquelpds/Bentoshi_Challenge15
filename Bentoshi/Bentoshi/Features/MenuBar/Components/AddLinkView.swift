@@ -70,7 +70,7 @@ struct AddLinkView: View {
                     .onSubmit {
                         Task {
                             if !newLinkName.isEmpty && !newReceivedLink.isEmpty {
-                                await presenter.addArtefact(to: workspace, payload: .link(url: newReceivedLink, title: newLinkName))
+                                await presenter.addArtefact(to: workspace, payload: .link(url: newReceivedLink, name: newLinkName))
                                 newLinkName = ""
                                 newReceivedLink = ""
                             }
@@ -100,7 +100,7 @@ struct AddLinkView: View {
             Button {
                 Task {
                     if !newLinkName.isEmpty && !newReceivedLink.isEmpty {
-                        await presenter.addArtefact(to: workspace, payload: .link(url: newReceivedLink, title: newLinkName))
+                        await presenter.addArtefact(to: workspace, payload: .link(url: newReceivedLink, name: newLinkName))
                         newLinkName = ""
                         newReceivedLink = ""
                     }
