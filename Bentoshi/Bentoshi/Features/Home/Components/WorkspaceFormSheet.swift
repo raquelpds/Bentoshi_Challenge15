@@ -29,7 +29,7 @@ struct WorkspaceFormView: View {
     let mode: Mode
     var onSave: (Workspace, String, WorkspaceColor) -> Void
 
-    @State private var showError = false
+    @State private var canSave = false
     @State private var workspaceName: String
     @State private var selectedColor: WorkspaceColor
 
@@ -48,74 +48,62 @@ struct WorkspaceFormView: View {
         case .edit(let workspace):
             _workspaceName = State(initialValue: workspace.name)
             _selectedColor = State(initialValue: workspace.coverColor)
+            _canSave = State(initialValue: true)
         }
     }
 
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 65) {
+            
+            VStack(spacing: 28) {
+                VStack(spacing: 10) {
+                    Text(mode.title)
+                        .font(.headline)
+                        .fontWeight(.semibold)
 
-            Text(mode.title)
-                .font(.headline)
-                .fontWeight(.semibold)
+                    preview
+                }
 
-            preview
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Nome")
+                        .font(.subheadline)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Nome")
-                    .font(.subheadline)
-
-                TextField("Nome do workspace", text: $workspaceName)
-                    .textFieldStyle(.plain)
-                    .padding(12)
-                    .background(Color.gray.opacity(0.25))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .onChange(of: workspaceName) {
-                        showError = false
-                    }
-
-                if showError {
-                    Text("Por favor, informe um nome para o workspace.")
-                        .font(.caption)
-                        .foregroundStyle(.red)
+                    TextField("Nome do workspace", text: $workspaceName)
+                        .textFieldStyle(.plain)
+                        .padding(12)
+                        .background(Color.gray.opacity(0.25))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .onChange(of: workspaceName) {
+                            canSave = true
+                        }
+                    
+                    WorkspaceColorSelector(selection: $selectedColor)
                 }
             }
 
-            WorkspaceColorSelector(selection: $selectedColor)
+            HStack {
+                Spacer()
 
-            HStack(spacing: 12) {
-                Button {
+                Button("Cancelar") {
                     dismiss()
-                } label: {
-                    Text("Cancelar")
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(Color.gray.opacity(0.4))
-                        .clipShape(RoundedRectangle(cornerRadius: 30))
                 }
-                .buttonStyle(.plain)
 
-                Button {
+                Button("Salvar") {
                     save()
-                } label: {
-                    Text("Salvar")
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(Color.gray.opacity(0.25))
-                        .clipShape(RoundedRectangle(cornerRadius: 30))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
+                .disabled(!canSave)
             }
         }
         .padding(32)
-        .frame(maxWidth: 560)
-        .background(Color.gray.opacity(0.12))
         .clipShape(RoundedRectangle(cornerRadius: 24))
         .padding()
     }
 
     private var preview: some View {
         HStack(spacing: 10) {
-            RoundedRectangle(cornerRadius: 24)
+            RoundedRectangle(cornerRadius: 18)
                 .foregroundStyle(
                     ArtefactColorPalette.color(
                         for: .text,
@@ -125,7 +113,7 @@ struct WorkspaceFormView: View {
                 )
 
             VStack(spacing: 10) {
-                RoundedRectangle(cornerRadius: 24)
+                RoundedRectangle(cornerRadius: 18)
                     .foregroundStyle(
                         ArtefactColorPalette.color(
                             for: .link,
@@ -135,7 +123,7 @@ struct WorkspaceFormView: View {
                     )
                     .frame(height: 78)
 
-                RoundedRectangle(cornerRadius: 24)
+                RoundedRectangle(cornerRadius: 18)
                     .foregroundStyle(
                         ArtefactColorPalette.color(
                             for: .archive,
@@ -145,23 +133,23 @@ struct WorkspaceFormView: View {
                     )
             }
         }
-        .frame(width: 300, height: 240)
+        .frame(width: 240, height: 190)
+        .onChange(of: workspaceName) { _, newValue in
+            let trimmedName = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            if trimmedName.isEmpty {
+                canSave = false
+            }
+        }
     }
 
     private func save() {
-        let trimmedName = workspaceName.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        guard !trimmedName.isEmpty else {
-            showError = true
-            return
-        }
-
         let workspace: Workspace
 
         switch mode {
         case .create:
             workspace = Workspace(
-                name: trimmedName,
+                name: workspaceName,
                 coverColor: selectedColor
             )
 
@@ -169,7 +157,7 @@ struct WorkspaceFormView: View {
             workspace = existingWorkspace
         }
 
-        onSave(workspace, trimmedName, selectedColor)
+        onSave(workspace, workspaceName, selectedColor)
         dismiss()
     }
 }
