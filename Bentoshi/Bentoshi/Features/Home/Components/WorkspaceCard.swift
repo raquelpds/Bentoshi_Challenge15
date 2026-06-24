@@ -1,6 +1,6 @@
 //
 //  WorkspaceCard.swift
-//  
+//
 //
 //  Created by Rebeca Maria de Morais Guimães on 18/06/26.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct WorkspaceCard: View {
-
+    
     @Environment(\.colorScheme) private var colorScheme
     let workspace: Workspace
     let sortOption: SortOption
@@ -19,43 +19,60 @@ struct WorkspaceCard: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 230)
                 .clipShape(RoundedRectangle(cornerRadius: 35))
-
+            
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(workspace.name)
                         .font(.headline)
                         .fontWeight(.semibold)
-
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    
                     Spacer()
                 }
-
-                Text(dateText)
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.secondary)
+                
+                HStack(spacing: 4) {
+                    Text("\(workspace.artefacts.count) \(workspace.artefacts.count > 1 ? "Itens" : "Item")")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.secondary)
+                    
+                    Text("|")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.secondary)
+                    
+                    Text(dateText)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.secondary)
+                    
+                    Spacer()
+                }
+                
+                
             }
-            .padding(.horizontal, 4)
+            .padding(.horizontal, 30)
         }
         .frame(maxWidth: .infinity)
     }
     
     private var dateText: String {
         let isCreatedSort = sortOption == .lastCreated
-
-        let prefix = isCreatedSort ? "Criado" : "Modificado"
+        
         let date = isCreatedSort ? workspace.createdAt : workspace.updatedAt
-
+        
         if Calendar.current.isDateInToday(date) {
-            return "\(prefix) hoje"
+            return "Hoje"
         }
-
+        
         if Calendar.current.isDateInYesterday(date) {
-            return "\(prefix) ontem"
+            return "Ontem"
         }
-
-        return "\(prefix) em: \(date.formatted(.dateTime.day().month().year()))"
+        
+        return "\(date.formatToStringFullDate())"
     }
-
+    
 }
 
 #Preview("Sort Alphabet") {
