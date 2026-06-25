@@ -64,6 +64,7 @@ struct WorkspaceDetailContent: View {
                     .gesture(
                         DragGesture()
                             .onChanged {
+                                print($0.translation)
                                 dragOffsets[artefact.id] = $0.translation
                             }
                             .onEnded { value in
