@@ -20,10 +20,11 @@ final class Artefact {
     var createdAt: Date
     var updatedAt: Date
     
-    var width: Double
-    var height: Double
-    var positionX: Int
-    var positionY: Int
+    var row: Int
+    var column: Int
+    
+    var width: Int
+    var height: Int
     
     var bookmark: Data?
     var workspace: Workspace?
@@ -31,7 +32,7 @@ final class Artefact {
     @Relationship(deleteRule: .cascade)
     var searchIndexes: [SearchIndex]
 
-    init(name: String, type: ArtefactType, content: String, workspaceId: UUID, width: Double, height: Double, positionX: Int, positionY: Int, bookmark: Data? = nil) {
+    init(name: String, type: ArtefactType, content: String, workspaceId: UUID, row: Int, column: Int, width: Int, height: Int, bookmark: Data? = nil) {
         self.id = UUID()
         self.createdAt = Date()
         self.updatedAt = Date()
@@ -40,12 +41,13 @@ final class Artefact {
         self.type = type
         self.content = content
         self.workspaceId = workspaceId
+        
+        self.row = row
+        self.column = column
 
         self.width = width
         self.height = height
 
-        self.positionX = positionX
-        self.positionY = positionY
         self.bookmark = bookmark
 
         self.searchIndexes = []
@@ -53,6 +55,8 @@ final class Artefact {
         rebuildAutomaticSearchIndexes()
     }
 }
+
+
 
 extension Artefact {
 

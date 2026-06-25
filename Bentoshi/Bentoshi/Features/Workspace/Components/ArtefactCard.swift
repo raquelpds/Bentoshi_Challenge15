@@ -10,48 +10,52 @@ import SwiftUI
 struct ArtefactCard: View {
     
     @Environment(\.colorScheme) private var colorScheme
+    
     let artefact: Artefact
     let pallete: WorkspaceColor
+    
     let action: () -> Void
     let onUpdate: () -> Void
     let onDelete: () -> Void
     let onRevealInFinder: () -> Void
     
-    private var iconName: String {
-        switch artefact.type {
-        case .archive:
-            return "doc"
-        default:
-            return "square.grid.2x2"
-        }
-    }
+//    
+//    private let cellSize: CGFloat = 60
+//    
+//    //variaveis para o drag and drop
+//    @State private var dragOffset: CGSize = .zero
+    
     
     var body: some View {
+        //manter que todos são um botão
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 8) {
-                Image(systemName: iconName)
-                    .font(.title2)
-                    .foregroundStyle(.black)
+            
+            ZStack(alignment: .center) {
+                
+                RoundedRectangle(cornerRadius: 15)
+                    .fill(ArtefactColorPalette.color(for: artefact.type, workspaceBaseColor: pallete, scheme: colorScheme))
                 
                 Text(artefact.name)
                     .font(.headline)
                     .foregroundStyle(.black)
                     .lineLimit(2)
-                
-                Text(artefact.type.rawValue)
-                    .font(.caption)
-                    .foregroundStyle(.black)
-                    .foregroundStyle(.secondary)
             }
-            .padding()
-            .frame(
-                width: artefact.width,
-                height: artefact.height,
-                alignment: .topLeading
-            )
-            .background(ArtefactColorPalette.color(for: artefact.type, workspaceBaseColor: pallete, scheme: colorScheme))
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+//            .frame(width: CGFloat(artefact.width) * cellSize, height: CGFloat(artefact.height) * cellSize)
+//            .position(
+//                x: CGFloat(artefact.column) * cellSize + CGFloat(artefact.width) * cellSize / 2 + dragOffset.width,
+//                y: CGFloat(artefact.row) * cellSize + CGFloat(artefact.height) * cellSize / 2 + dragOffset.height
+//            )
+//            .gesture(
+//                DragGesture()
+//                    .onChanged {
+//                        dragOffset = $0.translation
+//                    }
+//                    .onEnded { _ in
+//                        dragOffset = .zero
+//                    }
+//            )
         }
+        
         .buttonStyle(.plain)
         .contextMenu {
             Button("Abrir") {

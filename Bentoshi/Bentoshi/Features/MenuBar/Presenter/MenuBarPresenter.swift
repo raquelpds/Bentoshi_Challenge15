@@ -46,7 +46,17 @@ final class MenuBarPresenter {
                 relativeTo: nil
             )
             
-            let artefact = Artefact(name: name, type: .archive, content: archiveUrl.lastPathComponent, workspaceId: workspace.id, width: 100, height: 100, positionX: 0, positionY: 0, bookmark: bookmark)
+            let artefact = Artefact(
+                name: name,
+                type: .archive,
+                content: archiveUrl.lastPathComponent,
+                workspaceId: workspace.id,
+                row: 0,
+                column: 0,
+                width: ArtefactType.archive.defaultWidth,
+                height: ArtefactType.archive.defaultHeight,
+                bookmark: bookmark
+            )
             
             workspace.artefacts.append(artefact)
             
@@ -63,10 +73,11 @@ final class MenuBarPresenter {
                 type: .link,
                 content: url,
                 workspaceId: workspace.id,
-                width: 200,
-                height: 100,
-                positionX: 0,
-                positionY: 0)
+                row: 0,
+                column: 0,
+                width: ArtefactType.link.defaultWidth,
+                height: ArtefactType.link.defaultHeight
+            )
             
             workspace.artefacts.append(artefact)
             
