@@ -20,6 +20,8 @@ struct WorkspaceDetailContent: View {
     @Binding var alert: WorkspaceAlert?
 
     private let cellSize: CGFloat = 60
+    private let rows = 20
+    private let columns = 20
 
     @State private var dragOffsets: [UUID: CGSize] = [:]
     @State private var resizeOffsets: [UUID: CGSize] = [:]
@@ -124,13 +126,13 @@ struct WorkspaceDetailContent: View {
                     )
                     .position(
                         x:
-                            CGFloat(artefact.column)
+                            CGFloat(artefact.gridColumn)
                             * cellSize
                             + displayedWidth / 2
                             + (dragOffsets[artefact.id]?.width ?? 0),
 
                         y:
-                            CGFloat(artefact.row)
+                            CGFloat(artefact.gridRow)
                             * cellSize
                             + displayedHeight / 2
                             + (dragOffsets[artefact.id]?.height ?? 0)
@@ -163,8 +165,8 @@ struct WorkspaceDetailContent: View {
 
                                 moveArtefact(
                                     artefact,
-                                    to: artefact.row + deltaRow,
-                                    column: artefact.column + deltaColumn
+                                    to: artefact.gridRow + deltaRow,
+                                    column: artefact.gridColumn + deltaColumn
                                 )
 
                                 dragOffsets[artefact.id] = .zero
@@ -182,11 +184,64 @@ struct WorkspaceDetailContent: View {
         to row: Int,
         column: Int
     ) {
+        //isso daqui serve para verificar se o artefato será movido para fora da área do grid. Eu declarei uma variável
+        //chamada row and column e nelas eu coloquei o tamanho específico da nossa grid. Caso o artefato esteja numa row e column maior ou menor que a da variável, ele retorna o artefato para sua posição inicial.
+        guard isPlacementValid(
+            artefact: artefact,
+            row: row,
+            column: column,
+            width: artefact.width,
+            height: artefact.height
 
-        artefact.row = row
-        artefact.column = column
-
+        ) else {
+            return
+        }
+        //se estiver dentro do grid, atualiza a row e a column do artefato.
+        artefact.gridRow = row
+        artefact.gridColumn = column
+        
+        //salva row e column no banco de dados.
         try? modelContext.save()
+    }
+    
+    private func isPlacementValid(
+        artefact: Artefact,
+        row: Int,
+        column: Int,
+        width: Int,
+        height: Int
+    ) -> Bool {
+
+        // Verifica limites da grid
+        if row < 0 ||
+            column < 0 ||
+            row + height > rows ||
+            column + width > columns {
+
+            return false
+        }
+
+        // Verifica colisão com outros artefatos
+        for other in workspace.artefacts {
+
+            // Ignora o próprio artefato
+            if other.id == artefact.id {
+                continue
+            }
+
+            let overlap = !(
+                column + width <= other.gridColumn ||
+                column >= other.gridColumn + other.width ||
+                row + height <= other.gridRow ||
+                row >= other.gridRow + other.height
+            )
+
+            if overlap {
+                return false
+            }
+        }
+
+        return true
     }
 
     private func resizeArtefact(
@@ -194,9 +249,28 @@ struct WorkspaceDetailContent: View {
         width: Int,
         height: Int
     ) {
+        
+        //a função MAX (nativa do IOS) recebe dois valores e devolve o maior deles.
+        //Isso daqui serve para evitar que o valor fique menor que o InitialWidth e InitialHeight, definido lá no ArtefactType.
+        //Ou seja, não é possível diminuir o card do link para menor que 3 colunas.
+        
+        let newWidth = max(artefact.type.initialWidth, width)
 
-        artefact.width = max(1, width)
-        artefact.height = max(1, height)
+        let newHeight = max(artefact.type.initialHeight,height)
+        
+        guard isPlacementValid(
+            artefact: artefact,
+            row: artefact.gridRow,
+            column: artefact.gridColumn,
+            width: newWidth,
+            height: newHeight
+
+        ) else {
+            return
+        }
+
+        artefact.width = newWidth
+        artefact.height = newHeight
 
         try? modelContext.save()
     }
