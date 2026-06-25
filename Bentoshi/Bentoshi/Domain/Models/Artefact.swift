@@ -1,5 +1,5 @@
 //
-//  Workspace.swift
+//  Artefact.swift
 //  Bentoshi
 //
 //  Created by Lizandra Malta on 17/06/26.
@@ -7,6 +7,7 @@
 
 import SwiftData
 import Foundation
+import AppKit
 
 @Model
 final class Artefact {
@@ -16,6 +17,10 @@ final class Artefact {
     var name: String
     var type: ArtefactType
     var content: String
+
+    @Attribute(.externalStorage)
+    var formattedTextData: Data?
+
     var workspaceId: UUID
     var createdAt: Date
     var updatedAt: Date
@@ -32,14 +37,24 @@ final class Artefact {
     @Relationship(deleteRule: .cascade)
     var searchIndexes: [SearchIndex]
 
-    init(name: String, type: ArtefactType, content: String, workspaceId: UUID, row: Int, column: Int, width: Int, height: Int, bookmark: Data? = nil) {
+    init(
+        name: String,
+        type: ArtefactType,
+        content: String,
+        workspaceId: UUID,
+        row: Int, 
+        column: Int,
+        width: Int, 
+        height: Int,
+        bookmark: Data? = nil,
+        formattedText: NSAttributedString? = nil
+    ) {
         self.id = UUID()
-        self.createdAt = Date()
-        self.updatedAt = Date()
-        
+
         self.name = name
         self.type = type
         self.content = content
+
         self.workspaceId = workspaceId
         
         self.row = row
@@ -50,12 +65,18 @@ final class Artefact {
 
         self.bookmark = bookmark
 
+        self.createdAt = .now
+        self.updatedAt = .now
+
         self.searchIndexes = []
 
+        if let formattedText {
+            self.formattedTextData = formattedText.rtfData()
+        }
+        
         rebuildAutomaticSearchIndexes()
     }
 }
-
 
 
 extension Artefact {
@@ -221,5 +242,55 @@ extension Artefact {
         }
 
         return name
+    }
+}
+
+extension NSAttributedString {
+
+    func rtfData() -> Data? {
+
+        try? data(
+            from: NSRange(
+                location: 0,
+                length: length
+            ),
+            documentAttributes: [
+                .documentType: NSAttributedString.DocumentType.rtf
+            ]
+        )
+    }
+
+    static func fromRTF(_ data: Data?) -> NSAttributedString {
+
+        guard
+            let data,
+            let attributed = try? NSAttributedString(
+                data: data,
+                options: [
+                    .documentType: NSAttributedString.DocumentType.rtf
+                ],
+                documentAttributes: nil
+            )
+        else {
+            return NSAttributedString(string: "")
+        }
+
+        return attributed
+    }
+}
+
+extension Artefact {
+
+    func setFormattedText(_ text: NSAttributedString) {
+
+        formattedTextData = text.rtfData()
+
+        content = text.string
+        updatedAt = .now
+    }
+
+    func getFormattedText() -> NSAttributedString {
+
+        NSAttributedString.fromRTF(formattedTextData)
     }
 }

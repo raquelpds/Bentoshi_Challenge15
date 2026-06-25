@@ -47,6 +47,15 @@ struct WorkspaceSheetsModifier: ViewModifier {
                         }
                     }
                     
+                case .newText:
+                    TextEditorSheet(mode: .create) { title, content in
+                        Task {
+                            await presenter.addArtefact(
+                                to: workspace,
+                                payload: .text(title: title, content: content))
+                        }
+                    }
+                    
                 case .updateArchive(let artefact):
                     FilePicker(mode: .edit(artefact)) { fileUrl, fileName in
                         Task {
@@ -59,20 +68,33 @@ struct WorkspaceSheetsModifier: ViewModifier {
                             )
                         }
                     }
-                
-            case .updateLink(let artefact):
-                LinkFormSheet(mode: .edit(artefact)) { url, name in
-                    Task {
-                        await presenter.updateArtefact(
-                            artefact,
-                            payload: .link(
-                                newURL: url,
-                                newName: name
+                    
+                case .updateLink(let artefact):
+                    LinkFormSheet(mode: .edit(artefact)) { url, name in
+                        Task {
+                            await presenter.updateArtefact(
+                                artefact,
+                                payload: .link(
+                                    newURL: url,
+                                    newName: name
+                                )
                             )
-                        )
+                        }
+                    }
+                    
+                case .updateText(let artefact):
+                    TextEditorSheet(mode: .edit(artefact)) { title, content in
+                        Task {
+                            await presenter.updateArtefact(
+                                artefact,
+                                payload: .text(
+                                    newTitle: title,
+                                    newContent: content
+                                )
+                            )
+                        }
                     }
                 }
-            }
             }
     }
 }

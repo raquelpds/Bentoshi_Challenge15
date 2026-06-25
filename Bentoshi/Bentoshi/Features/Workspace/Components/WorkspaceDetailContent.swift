@@ -86,7 +86,10 @@ struct WorkspaceDetailContent: View {
                         pallete: workspace.coverColor,
                         
                     ) {
-                        if isValid(artefact) {
+                        if artefact.type == .text {
+                            route = .updateText(artefact)
+                        }
+                        else if (isValid(artefact)){
                             presenter.open(artefact)
                         }
                     } onUpdate: {
@@ -229,7 +232,7 @@ struct WorkspaceDetailContent: View {
         case .link:
             route = .updateLink(artefact)
         case .text:
-            break
+            route = .updateText(artefact)
         }
     }
 }
