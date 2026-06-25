@@ -24,7 +24,11 @@ struct WorkspaceDetailContent: View {
     private let columns = 20
 
     @State private var dragOffsets: [UUID: CGSize] = [:]
+    
+    //estado para saber qual artefato está sendo arrastado
+    @State private var draggingArtefactID: UUID?
     @State private var resizeOffsets: [UUID: CGSize] = [:]
+
 
     var body: some View {
 
@@ -39,49 +43,15 @@ struct WorkspaceDetailContent: View {
 
                 ForEach(workspace.artefacts) { artefact in
 
-                    let resizeOffset =
-                        resizeOffsets[artefact.id]
-                        ?? .zero
+                    let resizeOffset = resizeOffsets[artefact.id] ?? .zero
 
-                    let previewWidth =
-                        CGFloat(
-                            max(
-                                1,
-                                artefact.width
-                                +
-                                Int(
-                                    (
-                                        resizeOffset.width
-                                        / cellSize
-                                    ).rounded()
-                                )
-                            )
-                        ) * cellSize
+                    let previewWidth = CGFloat(max(1, artefact.width + Int((resizeOffset.width / cellSize).rounded()))) * cellSize
 
-                    let previewHeight =
-                        CGFloat(
-                            max(
-                                1,
-                                artefact.height
-                                +
-                                Int(
-                                    (
-                                        resizeOffset.height
-                                        / cellSize
-                                    ).rounded()
-                                )
-                            )
-                        ) * cellSize
+                    let previewHeight = CGFloat(max(1, artefact.height + Int((resizeOffset.height / cellSize).rounded()))) * cellSize
 
-                    let displayedWidth =
-                        resizeOffset == .zero
-                        ? CGFloat(artefact.width) * cellSize
-                        : previewWidth
+                    let displayedWidth = resizeOffset == .zero ? CGFloat(artefact.width) * cellSize : previewWidth
 
-                    let displayedHeight =
-                        resizeOffset == .zero
-                        ? CGFloat(artefact.height) * cellSize
-                        : previewHeight
+                    let displayedHeight = resizeOffset == .zero ? CGFloat(artefact.height) * cellSize : previewHeight
 
                     ArtefactCard(
                         artefact: artefact,
@@ -127,6 +97,8 @@ struct WorkspaceDetailContent: View {
                         width: displayedWidth,
                         height: displayedHeight
                     )
+                    //Enquanto um artefato estiver sendo arrastado, ele recebe um zIndex maior para ser desenhado acima dos outros cards da workspace.
+                    .zIndex(draggingArtefactID == artefact.id ? 1 : 0)
                     .position(
                         x:
                             CGFloat(artefact.gridColumn)
@@ -147,31 +119,25 @@ struct WorkspaceDetailContent: View {
                     .gesture(
                         DragGesture()
                             .onChanged { value in
-                                dragOffsets[artefact.id] =
-                                    value.translation
+                                
+                                // Define qual artefato está sendo arrastado atualmente. Será utilizado pelo zIndex para trazer o card para frente
+                                draggingArtefactID = artefact.id
+                                dragOffsets[artefact.id] = value.translation
                             }
                             .onEnded { value in
 
-                                let deltaColumn = Int(
-                                    (
-                                        value.translation.width
-                                        / cellSize
-                                    ).rounded()
-                                )
+                                let deltaColumn = Int(( value.translation.width / cellSize).rounded())
 
-                                let deltaRow = Int(
-                                    (
-                                        value.translation.height
-                                        / cellSize
-                                    ).rounded()
-                                )
+                                let deltaRow = Int((value.translation.height / cellSize).rounded())
 
                                 moveArtefact(
                                     artefact,
                                     to: artefact.gridRow + deltaRow,
                                     column: artefact.gridColumn + deltaColumn
                                 )
-
+                                
+                                // Após finalizar o movimento, nenhum artefato permanece em estado de arraste.
+                                draggingArtefactID = nil
                                 dragOffsets[artefact.id] = .zero
                             }
                     )
