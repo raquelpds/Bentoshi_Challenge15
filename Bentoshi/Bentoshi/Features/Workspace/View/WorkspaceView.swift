@@ -127,12 +127,6 @@ struct WorkspaceView: View {
                 }
                 .navigationTitle(current.name)
                 .toolbar {
-                    ToolbarItem(placement: .primaryAction) {
-                        SearchToolbarItem(
-                            searchText: $presenter.searchText,
-                            isExpanded: $presenter.isSearchBarExpanded
-                        )
-                    }
                     
                     ToolbarItem(placement: .primaryAction) {
                         Menu {
@@ -167,6 +161,7 @@ struct WorkspaceView: View {
                 }
             }
         }
+        .searchable(text: $presenter.searchText)
         .onChange(of: presenter.searchText) { _, _ in
             presenter.onSearchTextChangedOn(current)
         }

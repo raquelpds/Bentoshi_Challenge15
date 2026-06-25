@@ -34,13 +34,6 @@ struct HomeView: View {
         .navigationTitle("Workspaces")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                SearchToolbarItem(
-                    searchText: $presenter.searchText,
-                    isExpanded: $presenter.isSearchBarExpanded
-                )
-            }
-            
-            ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button{
                         sortOptionRaw = SortOption.alphabet.rawValue
@@ -75,7 +68,7 @@ struct HomeView: View {
                         }
                     }
                 } label: {
-                    Image(systemName: "square.grid.3x1.below.line.grid.1x2")
+                    Image(systemName: "arrow.up.arrow.down")
                 }
                 .menuIndicator(.hidden)
             }
@@ -88,6 +81,7 @@ struct HomeView: View {
         .onChange(of: presenter.searchText) { _, _ in
             presenter.onSearchTextChanged()
         }
+        .searchable(text: $presenter.searchText)
     }
     
     private var isSearchActive: Bool {
