@@ -12,13 +12,13 @@ import AppKit
 enum ArtefactCreatePayload {
     case archive(url: URL, name: String)
     case link(url: String, name: String)
-    case text(title: String, content: String)
+    case text(title: String, content: NSAttributedString)
 }
 
 enum ArtefactUpdatePayload {
     case archive(newURL: URL, newName: String)
     case link(newURL: String, newName: String)
-    case text(newTitle: String, newContent: String)
+    case text(newTitle: String, newContent: NSAttributedString)
 }
 
 @Observable
@@ -29,6 +29,7 @@ final class WorkspacePresenter {
     var searchText: String = ""
     var isSearching = false
     var isSearchBarExpanded = false
+    var shouldOpenTextEditor = false
     
     private let searchDebouncer = SearchDebouncer()
     private var searchTask: Task<Void, Never>?
@@ -136,17 +137,18 @@ final class WorkspacePresenter {
         }
     }
     
-    func addTextArtefact(to workspace: Workspace, content: String, withName name: String) async {
+    func addTextArtefact(to workspace: Workspace, content: NSAttributedString, withName name: String) async {
         do {
             let artefact = Artefact(
                 name: name,
                 type: .text,
-                content: content,
+                content: content.string,
                 workspaceId: workspace.id,
                 width: 200,
                 height: 200,
                 positionX: 0,
-                positionY: 0
+                positionY: 0,
+                formattedText: content
             )
             
             workspace.artefacts.append(artefact)
@@ -210,10 +212,11 @@ final class WorkspacePresenter {
         }
     }
     
-    func updateTextArtefact(_ artefact: Artefact, newContent: String, newName: String) async {
+    func updateTextArtefact(_ artefact: Artefact, newContent: NSAttributedString, newName: String) async {
         do {
             artefact.name = newName
-            artefact.content = newContent
+            artefact.content = newContent.string
+            artefact.setFormattedText(newContent)
             try await interactor.updateArtefact(artefact)
         } catch {
             print("Erro ao atualizar arquivo: \(error)")
@@ -235,7 +238,6 @@ final class WorkspacePresenter {
     }
     
     func openArchive(_ artefact: Artefact) {
-        
         guard let url = artefact.archiveUrl else { return }
         
         SystemLauncher.open(url)

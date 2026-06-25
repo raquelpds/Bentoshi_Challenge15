@@ -159,7 +159,7 @@ struct RichTextEditor: NSViewRepresentable {
         guard let textView = scrollView.documentView as? NSTextView else { return }
 
         // Sincroniza apenas se a string bruta mudar (evita loops com atributos visuais)
-        if textView.attributedString().string != text.string {
+        if !textView.attributedString().isEqual(to: text) {
             textView.textStorage?.setAttributedString(text)
         }
     }

@@ -29,10 +29,12 @@ struct TextEditorSheet: View {
             }
         }
 
-        var initialContent: String {
+        var initialText: NSAttributedString {
             switch self {
-            case .create: return ""
-            case .edit(let artefact): return artefact.content
+            case .create:
+                return NSAttributedString(string: "")
+            case .edit(let artefact):
+                return artefact.getFormattedText()
             }
         }
     }
@@ -45,20 +47,18 @@ struct TextEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     let mode: Mode
-    var onSave: (_ title: String, _ content: String) -> Void
+    var onSave: (_ title: String, _ formattedText: NSAttributedString) -> Void
 
     init(
         mode: Mode = .create,
-        onSave: @escaping (_ title: String, _ content: String) -> Void
+        onSave: @escaping (_ title: String, _ formattedText: NSAttributedString) -> Void
     ) {
         self.mode = mode
         self.onSave = onSave
 
         _title = State(initialValue: mode.initialTitle)
         _text = State(
-            initialValue: Self.markdownToAttributed(
-                mode.initialContent
-            )
+            initialValue: mode.initialText
         )
     }
 
@@ -136,7 +136,7 @@ struct TextEditorSheet: View {
 
             Button("Salvar") {
                 // Passando o título e o conteúdo em markdown agora que o fechamento exige ambos
-                onSave(title, Self.attributedToMarkdown(text))
+                onSave(title, text)
                 dismiss()
             }
             .buttonStyle(.borderedProminent)
@@ -365,15 +365,4 @@ struct TextEditorSheet: View {
         guard let textView = editorContext.textView else { return }
         text = textView.attributedString()
     }
-
-    static func markdownToAttributed(_ markdown: String) -> NSAttributedString {
-        (try? AttributedString(markdown: markdown))
-            .map { NSAttributedString($0) }
-        ?? NSAttributedString(string: markdown)
-    }
-
-    static func attributedToMarkdown(_ attributed: NSAttributedString) -> String {
-        attributed.string
-    }
 }
-
