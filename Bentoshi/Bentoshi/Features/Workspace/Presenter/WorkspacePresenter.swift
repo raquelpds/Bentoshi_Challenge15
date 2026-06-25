@@ -103,8 +103,8 @@ final class WorkspacePresenter {
                 workspaceId: workspace.id,
                 row: 0,
                 column: 0,
-                width: ArtefactType.archive.defaultWidth,
-                height: ArtefactType.archive.defaultHeight,
+                width: ArtefactType.archive.initialWidth,
+                height: ArtefactType.archive.initialHeight,
                 bookmark: bookmark
             )
             
@@ -125,8 +125,8 @@ final class WorkspacePresenter {
                 workspaceId: workspace.id,
                 row: 0,
                 column: 0,
-                width: ArtefactType.link.defaultWidth,
-                height: ArtefactType.link.defaultHeight
+                width: ArtefactType.link.initialWidth,
+                height: ArtefactType.link.initialHeight
             )
             
             workspace.artefacts.append(artefact)
@@ -146,8 +146,8 @@ final class WorkspacePresenter {
                 workspaceId: workspace.id,
                 row: 0,
                 column: 0,
-                width: ArtefactType.text.defaultWidth,
-                height: ArtefactType.text.defaultHeight,
+                width: ArtefactType.text.initialWidth,
+                height: ArtefactType.text.initialHeight,
                 formattedText: content
             )
             

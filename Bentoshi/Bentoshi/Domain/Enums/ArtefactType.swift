@@ -15,7 +15,7 @@ enum ArtefactType: String, Codable, CaseIterable {
 
 extension ArtefactType {
 
-    var defaultWidth: Int {
+    var initialWidth: Int {
         switch self {
         case .link:
             return 3
@@ -28,7 +28,7 @@ extension ArtefactType {
         }
     }
 
-    var defaultHeight: Int {
+    var initialHeight: Int {
         switch self {
         case .link:
             return 1

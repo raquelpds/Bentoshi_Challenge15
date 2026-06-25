@@ -20,9 +20,15 @@ struct WorkspaceDetailContent: View {
     @Binding var alert: WorkspaceAlert?
 
     private let cellSize: CGFloat = 60
+    private let rows = 20
+    private let columns = 20
 
     @State private var dragOffsets: [UUID: CGSize] = [:]
+    
+    //estado para saber qual artefato está sendo arrastado
+    @State private var draggingArtefactID: UUID?
     @State private var resizeOffsets: [UUID: CGSize] = [:]
+
 
     var body: some View {
 
@@ -37,49 +43,15 @@ struct WorkspaceDetailContent: View {
 
                 ForEach(workspace.artefacts) { artefact in
 
-                    let resizeOffset =
-                        resizeOffsets[artefact.id]
-                        ?? .zero
+                    let resizeOffset = resizeOffsets[artefact.id] ?? .zero
 
-                    let previewWidth =
-                        CGFloat(
-                            max(
-                                1,
-                                artefact.width
-                                +
-                                Int(
-                                    (
-                                        resizeOffset.width
-                                        / cellSize
-                                    ).rounded()
-                                )
-                            )
-                        ) * cellSize
+                    let previewWidth = CGFloat(max(1, artefact.width + Int((resizeOffset.width / cellSize).rounded()))) * cellSize
 
-                    let previewHeight =
-                        CGFloat(
-                            max(
-                                1,
-                                artefact.height
-                                +
-                                Int(
-                                    (
-                                        resizeOffset.height
-                                        / cellSize
-                                    ).rounded()
-                                )
-                            )
-                        ) * cellSize
+                    let previewHeight = CGFloat(max(1, artefact.height + Int((resizeOffset.height / cellSize).rounded()))) * cellSize
 
-                    let displayedWidth =
-                        resizeOffset == .zero
-                        ? CGFloat(artefact.width) * cellSize
-                        : previewWidth
+                    let displayedWidth = resizeOffset == .zero ? CGFloat(artefact.width) * cellSize : previewWidth
 
-                    let displayedHeight =
-                        resizeOffset == .zero
-                        ? CGFloat(artefact.height) * cellSize
-                        : previewHeight
+                    let displayedHeight = resizeOffset == .zero ? CGFloat(artefact.height) * cellSize : previewHeight
 
                     ArtefactCard(
                         artefact: artefact,
@@ -125,15 +97,17 @@ struct WorkspaceDetailContent: View {
                         width: displayedWidth,
                         height: displayedHeight
                     )
+                    //Enquanto um artefato estiver sendo arrastado, ele recebe um zIndex maior para ser desenhado acima dos outros cards da workspace.
+                    .zIndex(draggingArtefactID == artefact.id ? 1 : 0)
                     .position(
                         x:
-                            CGFloat(artefact.column)
+                            CGFloat(artefact.gridColumn)
                             * cellSize
                             + displayedWidth / 2
                             + (dragOffsets[artefact.id]?.width ?? 0),
 
                         y:
-                            CGFloat(artefact.row)
+                            CGFloat(artefact.gridRow)
                             * cellSize
                             + displayedHeight / 2
                             + (dragOffsets[artefact.id]?.height ?? 0)
@@ -145,31 +119,25 @@ struct WorkspaceDetailContent: View {
                     .gesture(
                         DragGesture()
                             .onChanged { value in
-                                dragOffsets[artefact.id] =
-                                    value.translation
+                                
+                                // Define qual artefato está sendo arrastado atualmente. Será utilizado pelo zIndex para trazer o card para frente
+                                draggingArtefactID = artefact.id
+                                dragOffsets[artefact.id] = value.translation
                             }
                             .onEnded { value in
 
-                                let deltaColumn = Int(
-                                    (
-                                        value.translation.width
-                                        / cellSize
-                                    ).rounded()
-                                )
+                                let deltaColumn = Int(( value.translation.width / cellSize).rounded())
 
-                                let deltaRow = Int(
-                                    (
-                                        value.translation.height
-                                        / cellSize
-                                    ).rounded()
-                                )
+                                let deltaRow = Int((value.translation.height / cellSize).rounded())
 
                                 moveArtefact(
                                     artefact,
-                                    to: artefact.row + deltaRow,
-                                    column: artefact.column + deltaColumn
+                                    to: artefact.gridRow + deltaRow,
+                                    column: artefact.gridColumn + deltaColumn
                                 )
-
+                                
+                                // Após finalizar o movimento, nenhum artefato permanece em estado de arraste.
+                                draggingArtefactID = nil
                                 dragOffsets[artefact.id] = .zero
                             }
                     )
@@ -185,11 +153,64 @@ struct WorkspaceDetailContent: View {
         to row: Int,
         column: Int
     ) {
+        //isso daqui serve para verificar se o artefato será movido para fora da área do grid. Eu declarei uma variável
+        //chamada row and column e nelas eu coloquei o tamanho específico da nossa grid. Caso o artefato esteja numa row e column maior ou menor que a da variável, ele retorna o artefato para sua posição inicial.
+        guard isPlacementValid(
+            artefact: artefact,
+            row: row,
+            column: column,
+            width: artefact.width,
+            height: artefact.height
 
-        artefact.row = row
-        artefact.column = column
-
+        ) else {
+            return
+        }
+        //se estiver dentro do grid, atualiza a row e a column do artefato.
+        artefact.gridRow = row
+        artefact.gridColumn = column
+        
+        //salva row e column no banco de dados.
         try? modelContext.save()
+    }
+    
+    private func isPlacementValid(
+        artefact: Artefact,
+        row: Int,
+        column: Int,
+        width: Int,
+        height: Int
+    ) -> Bool {
+
+        // Verifica limites da grid
+        if row < 0 ||
+            column < 0 ||
+            row + height > rows ||
+            column + width > columns {
+
+            return false
+        }
+
+        // Verifica colisão com outros artefatos
+        for other in workspace.artefacts {
+
+            // Ignora o próprio artefato
+            if other.id == artefact.id {
+                continue
+            }
+
+            let overlap = !(
+                column + width <= other.gridColumn ||
+                column >= other.gridColumn + other.width ||
+                row + height <= other.gridRow ||
+                row >= other.gridRow + other.height
+            )
+
+            if overlap {
+                return false
+            }
+        }
+
+        return true
     }
 
     private func resizeArtefact(
@@ -197,9 +218,28 @@ struct WorkspaceDetailContent: View {
         width: Int,
         height: Int
     ) {
+        
+        //a função MAX (nativa do IOS) recebe dois valores e devolve o maior deles.
+        //Isso daqui serve para evitar que o valor fique menor que o InitialWidth e InitialHeight, definido lá no ArtefactType.
+        //Ou seja, não é possível diminuir o card do link para menor que 3 colunas.
+        
+        let newWidth = max(artefact.type.initialWidth, width)
 
-        artefact.width = max(1, width)
-        artefact.height = max(1, height)
+        let newHeight = max(artefact.type.initialHeight,height)
+        
+        guard isPlacementValid(
+            artefact: artefact,
+            row: artefact.gridRow,
+            column: artefact.gridColumn,
+            width: newWidth,
+            height: newHeight
+
+        ) else {
+            return
+        }
+
+        artefact.width = newWidth
+        artefact.height = newHeight
 
         try? modelContext.save()
     }
