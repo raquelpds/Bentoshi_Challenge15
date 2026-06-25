@@ -95,10 +95,10 @@ final class WorkspacePresenter {
                 type: .archive,
                 content: archiveUrl.lastPathComponent,
                 workspaceId: workspace.id,
-                width: 100,
-                height: 100,
-                positionX: 0,
-                positionY: 0,
+                row: 0,
+                column: 0,
+                width: ArtefactType.archive.defaultWidth,
+                height: ArtefactType.archive.defaultHeight,
                 bookmark: bookmark
             )
             
@@ -117,10 +117,10 @@ final class WorkspacePresenter {
                 type: .link,
                 content: url,
                 workspaceId: workspace.id,
-                width: 200,
-                height: 100,
-                positionX: 0,
-                positionY: 0,
+                row: 0,
+                column: 0,
+                width: ArtefactType.link.defaultWidth,
+                height: ArtefactType.link.defaultHeight
             )
             
             workspace.artefacts.append(artefact)

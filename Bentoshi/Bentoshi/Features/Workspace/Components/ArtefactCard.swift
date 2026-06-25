@@ -8,68 +8,85 @@
 import SwiftUI
 
 struct ArtefactCard: View {
-    
+
     @Environment(\.colorScheme) private var colorScheme
+
     let artefact: Artefact
     let pallete: WorkspaceColor
+
     let action: () -> Void
     let onUpdate: () -> Void
     let onDelete: () -> Void
     let onRevealInFinder: () -> Void
-    
-    private var iconName: String {
-        switch artefact.type {
-        case .archive:
-            return "doc"
-        default:
-            return "square.grid.2x2"
-        }
-    }
-    
+
+    let onResizeChanged: (CGSize) -> Void
+    let onResizeEnded: (CGSize) -> Void
+
     var body: some View {
-        Button(action: action) {
-            VStack(alignment: .leading, spacing: 8) {
-                Image(systemName: iconName)
-                    .font(.title2)
-                    .foregroundStyle(.black)
-                
-                Text(artefact.name)
-                    .font(.headline)
-                    .foregroundStyle(.black)
-                    .lineLimit(2)
-                
-                Text(artefact.type.rawValue)
-                    .font(.caption)
-                    .foregroundStyle(.black)
-                    .foregroundStyle(.secondary)
-            }
-            .padding()
-            .frame(
-                width: artefact.width,
-                height: artefact.height,
-                alignment: .topLeading
-            )
-            .background(ArtefactColorPalette.color(for: artefact.type, workspaceBaseColor: pallete, scheme: colorScheme))
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+
+        ZStack(alignment: .bottomTrailing) {
+
+            RoundedRectangle(cornerRadius: 15)
+                .fill(
+                    ArtefactColorPalette.color(
+                        for: artefact.type,
+                        workspaceBaseColor: pallete,
+                        scheme: colorScheme
+                    )
+                )
+
+            Text(artefact.name)
+                .font(.headline)
+                .foregroundStyle(.black)
+                .lineLimit(2)
+                .padding()
+
+            Image(systemName: "arrow.down.right")
+                .font(.caption)
+                .foregroundStyle(.white)
+                .padding(8)
+                .background(.black)
+                .clipShape(Circle())
+                .padding(8)
+                .gesture(
+                    DragGesture()
+
+                        .onChanged { value in
+                            onResizeChanged(
+                                value.translation
+                            )
+                        }
+
+                        .onEnded { value in
+                            onResizeEnded(
+                                value.translation
+                            )
+                        }
+                )
         }
-        .buttonStyle(.plain)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            action()
+        }
         .contextMenu {
+
             Button("Abrir") {
                 action()
             }
-            
+
             Button("Editar") {
                 onUpdate()
             }
-            
+
             if artefact.type == .archive {
+
                 Button("Mostrar no Finder") {
                     onRevealInFinder()
                 }
             }
-            
+
             Divider()
-            
+
             Button(
                 "Excluir",
                 role: .destructive
