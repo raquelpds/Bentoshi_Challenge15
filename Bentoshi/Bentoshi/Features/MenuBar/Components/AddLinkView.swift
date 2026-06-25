@@ -16,6 +16,12 @@ struct AddLinkView: View {
     let presenter: MenuBarPresenter
     let workspace: Workspace
     
+    var canSave: Bool {
+        let trimmedLink = newReceivedLink.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedName = newLinkName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !trimmedLink.isEmpty && !trimmedName.isEmpty
+    }
+    
     var body: some View {
 
         VStack(spacing: 24) {
@@ -69,7 +75,7 @@ struct AddLinkView: View {
                     .textFieldStyle(.roundedBorder)
                     .onSubmit {
                         Task {
-                            if !newLinkName.isEmpty && !newReceivedLink.isEmpty {
+                            if canSave {
                                 await presenter.addArtefact(to: workspace, payload: .link(url: newReceivedLink, name: newLinkName))
                                 newLinkName = ""
                                 newReceivedLink = ""
@@ -99,7 +105,7 @@ struct AddLinkView: View {
             // Botão
             Button {
                 Task {
-                    if !newLinkName.isEmpty && !newReceivedLink.isEmpty {
+                    if canSave {
                         await presenter.addArtefact(to: workspace, payload: .link(url: newReceivedLink, name: newLinkName))
                         newLinkName = ""
                         newReceivedLink = ""

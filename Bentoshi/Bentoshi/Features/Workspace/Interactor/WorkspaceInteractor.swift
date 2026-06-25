@@ -7,6 +7,7 @@
 
 import SwiftData
 import Foundation
+import AppKit
 
 final class WorkspaceInteractor {
     
@@ -61,4 +62,5 @@ final class WorkspaceInteractor {
     func search(workspaceId: UUID, text: String) async throws -> [SearchIndex] {
         return try searchIndexService.searchArtefactFromWorkspaceWithId(workspaceId, text: text)
     }
+    
 }
