@@ -6,8 +6,13 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct WorkspaceDetailContent: View {
+    
+    //Variaveis adicionadas por Raquel
+    @Environment(\.modelContext)
+    private var modelContext
     
     let workspace: Workspace
     let presenter: WorkspacePresenter
@@ -16,13 +21,12 @@ struct WorkspaceDetailContent: View {
     
     private let cellSize: CGFloat = 60
     
-    //variaveis para o drag and drop
-    @State private var dragOffset: CGSize = .zero
+    @State private var dragOffsets: [UUID: CGSize] = [:]
+
     
     var body: some View {
 
         ScrollView([.horizontal, .vertical]) {
-
             ZStack(alignment: .topLeading) {
 
                 GridBackground(rows: 25, columns: 25)
@@ -49,16 +53,38 @@ struct WorkspaceDetailContent: View {
                     }
                     .frame(width: CGFloat(artefact.width) * cellSize, height: CGFloat(artefact.height) * cellSize)
                     .position(
-                        x: CGFloat(artefact.column) * cellSize + CGFloat(artefact.width) * cellSize / 2 + dragOffset.width,
-                        y: CGFloat(artefact.row) * cellSize + CGFloat(artefact.height) * cellSize / 2 + dragOffset.height
+                        x: CGFloat(artefact.column) * cellSize
+                            + CGFloat(artefact.width) * cellSize / 2
+                            + (dragOffsets[artefact.id]?.width ?? 0),
+
+                        y: CGFloat(artefact.row) * cellSize
+                            + CGFloat(artefact.height) * cellSize / 2
+                            + (dragOffsets[artefact.id]?.height ?? 0)
                     )
                     .gesture(
                         DragGesture()
                             .onChanged {
-                                dragOffset = $0.translation
+                                dragOffsets[artefact.id] = $0.translation
                             }
-                            .onEnded { _ in
-                                dragOffset = .zero
+                            .onEnded { value in
+
+                                let deltaColumn = Int(
+                                    (value.translation.width / cellSize)
+                                        .rounded()
+                                )
+
+                                let deltaRow = Int(
+                                    (value.translation.height / cellSize)
+                                        .rounded()
+                                )
+
+                                moveArtefact(
+                                    artefact,
+                                    to: artefact.row + deltaRow,
+                                    column: artefact.column + deltaColumn
+                                )
+
+                                dragOffsets.removeValue(forKey: artefact.id)
                             }
                     )
                 }
@@ -66,6 +92,26 @@ struct WorkspaceDetailContent: View {
             .padding()
         }
         .navigationTitle(workspace.name)
+    }
+    
+    private func moveArtefact(
+        _ artefact: Artefact,
+        to row: Int,
+        column: Int
+    ) {
+
+        artefact.row = row
+        artefact.column = column
+        
+        print("ANTES")
+        print(artefact.row)
+        print(artefact.column)
+
+        try? modelContext.save()
+        
+        print("DEPOIS")
+        print(artefact.row)
+        print(artefact.column)
     }
     
     private func isValid(_ artefact: Artefact) -> Bool {

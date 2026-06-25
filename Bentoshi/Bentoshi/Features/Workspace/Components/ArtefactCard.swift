@@ -19,12 +19,6 @@ struct ArtefactCard: View {
     let onDelete: () -> Void
     let onRevealInFinder: () -> Void
     
-//    
-//    private let cellSize: CGFloat = 60
-//    
-//    //variaveis para o drag and drop
-//    @State private var dragOffset: CGSize = .zero
-    
     
     var body: some View {
         //manter que todos são um botão
@@ -40,20 +34,6 @@ struct ArtefactCard: View {
                     .foregroundStyle(.black)
                     .lineLimit(2)
             }
-//            .frame(width: CGFloat(artefact.width) * cellSize, height: CGFloat(artefact.height) * cellSize)
-//            .position(
-//                x: CGFloat(artefact.column) * cellSize + CGFloat(artefact.width) * cellSize / 2 + dragOffset.width,
-//                y: CGFloat(artefact.row) * cellSize + CGFloat(artefact.height) * cellSize / 2 + dragOffset.height
-//            )
-//            .gesture(
-//                DragGesture()
-//                    .onChanged {
-//                        dragOffset = $0.translation
-//                    }
-//                    .onEnded { _ in
-//                        dragOffset = .zero
-//                    }
-//            )
         }
         
         .buttonStyle(.plain)
