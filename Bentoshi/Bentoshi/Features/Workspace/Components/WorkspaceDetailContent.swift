@@ -31,8 +31,8 @@ struct WorkspaceDetailContent: View {
             ZStack(alignment: .topLeading) {
 
                 GridBackground(
-                    rows: 25,
-                    columns: 25
+                    rows: 20,
+                    columns: 20
                 )
 
                 ForEach(workspace.artefacts) { artefact in
