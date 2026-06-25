@@ -144,10 +144,10 @@ final class WorkspacePresenter {
                 type: .text,
                 content: content.string,
                 workspaceId: workspace.id,
-                width: 200,
-                height: 200,
-                positionX: 0,
-                positionY: 0,
+                row: 0,
+                column: 0,
+                width: ArtefactType.text.defaultWidth,
+                height: ArtefactType.text.defaultHeight,
                 formattedText: content
             )
             
