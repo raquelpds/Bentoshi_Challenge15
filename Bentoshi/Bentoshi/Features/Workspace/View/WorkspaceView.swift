@@ -12,8 +12,10 @@ enum WorkspaceRoute: Identifiable {
     case editWorkspace
     case newArchive
     case newLink
+    case newText
     case updateArchive(Artefact)
     case updateLink(Artefact)
+    case updateText(Artefact)
     
     var id: String {
         switch self {
@@ -23,10 +25,14 @@ enum WorkspaceRoute: Identifiable {
             "newArchive"
         case .newLink:
             "newLink"
+        case .newText:
+            "newText"
         case .updateArchive(let artefact):
             "updateArchive-\(artefact.id)"
         case .updateLink(let artefact):
             "updateLink-\(artefact.id)"
+        case .updateText(let artefact):
+            "updateText-\(artefact.id)"
         }
     }
 }
@@ -126,6 +132,7 @@ struct WorkspaceView: View {
                 case .archive:
                     route = .newArchive
                 case .text:
+                    route = .newText
                     break
                 case .link:
                     route = .newLink

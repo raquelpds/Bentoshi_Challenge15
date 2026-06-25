@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import AppKit
 
 enum ArtefactCreatePayload {
     case archive(url: URL, name: String)
@@ -28,18 +29,19 @@ final class WorkspacePresenter {
     var searchText: String = ""
     var isSearching = false
     var isSearchBarExpanded = false
-
+    
     private let searchDebouncer = SearchDebouncer()
     private var searchTask: Task<Void, Never>?
     
     var allWorkspaces: [Workspace] = []
     
+    var richText: NSAttributedString = NSAttributedString(string: "")
     
     init(interactor: WorkspaceInteractor) {
         self.interactor = interactor
     }
     
-
+    
     func deleteWorkspace(_ workspace: Workspace) async {
         do {
             try await interactor.deleteWorkspace(id: workspace.id)
@@ -61,24 +63,27 @@ final class WorkspacePresenter {
     
     func addArtefact(to workspace: Workspace, payload: ArtefactCreatePayload) async {
         switch payload {
-
+            
         case .archive(let url, let name):
             await addArchiveArtefact(
                 to: workspace,
                 archiveUrl: url,
                 withName: name
             )
-
+            
         case .link(let url, let name):
             await addLinkArtefact(
                 to: workspace,
                 url: url,
                 withName: name
             )
-
+            
         case .text(let name, let content):
-            // await addTextArtefact(to: workspace, title: title, content: content)
-            break // apagar essa linha depois que implementar
+            await addTextArtefact(
+                to: workspace,
+                content: content,
+                withName: name
+            )
         }
     }
     
@@ -131,26 +136,50 @@ final class WorkspacePresenter {
         }
     }
     
+    func addTextArtefact(to workspace: Workspace, content: String, withName name: String) async {
+        do {
+            let artefact = Artefact(
+                name: name,
+                type: .text,
+                content: content,
+                workspaceId: workspace.id,
+                width: 200,
+                height: 200,
+                positionX: 0,
+                positionY: 0
+            )
+            
+            workspace.artefacts.append(artefact)
+            
+            try await interactor.updateWorkspace(workspace)
+        } catch {
+            print(error)
+        }
+    }
+    
     func updateArtefact(_ artefact: Artefact, payload: ArtefactUpdatePayload) async{
         switch payload {
-
+            
         case .archive(let newUrl, let newName):
             await updateArchiveArtefact(
                 artefact,
                 newUrl: newUrl,
                 newName: newName
             )
-
+            
         case .link(let newUrl, let newName):
             await updateLinkArtefact(
                 artefact,
                 newUrl: newUrl,
                 newName: newName
             )
-
-        case .text(let name, let content):
-            // await addTextArtefact(to: workspace, title: title, content: content)
-            break // apagar essa linha depois que implementar
+            
+        case .text(let newName, let newContent):
+            await updateTextArtefact(
+                artefact,
+                newContent: newContent,
+                newName: newName
+            )
         }
     }
     
@@ -162,9 +191,9 @@ final class WorkspacePresenter {
                 includingResourceValuesForKeys: nil,
                 relativeTo: nil
             )
-
+            
             try await interactor.updateArtefact(artefact)
-
+            
         } catch {
             print("Erro ao atualizar arquivo: \(error)")
         }
@@ -175,7 +204,17 @@ final class WorkspacePresenter {
             artefact.name = newName
             artefact.content = newUrl
             try await interactor.updateArtefact(artefact)
-
+            
+        } catch {
+            print("Erro ao atualizar arquivo: \(error)")
+        }
+    }
+    
+    func updateTextArtefact(_ artefact: Artefact, newContent: String, newName: String) async {
+        do {
+            artefact.name = newName
+            artefact.content = newContent
+            try await interactor.updateArtefact(artefact)
         } catch {
             print("Erro ao atualizar arquivo: \(error)")
         }
@@ -185,10 +224,10 @@ final class WorkspacePresenter {
         switch artefact.type {
         case .archive:
             openArchive(artefact)
-
+            
         case .link:
             openLink(artefact)
-
+            
         case .text:
             // openTextEditor(artefact)
             break // apagar essa linha depois que implementar
@@ -219,37 +258,37 @@ final class WorkspacePresenter {
     
     func revealArchiveInFinder(_ artefact: Artefact) {
         guard let url = artefact.archiveUrl else { return }
-
+        
         SystemLauncher.revealInFinder(url)
     }
     
     func onSearchTextChangedOn(_ workspace: Workspace) {
         let trimmedText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-
+        
         guard !trimmedText.isEmpty else {
             searchedItems = []
             isSearching = false
             searchDebouncer.cancel()
             return
         }
-
+        
         searchDebouncer.run {
             await self.performSearchOn(workspace)
         }
     }
-
+    
     func performSearchOn(_ workspace: Workspace) async {
         do {
             guard !Task.isCancelled else { return }
-
+            
             isSearching = true
-
+            
             defer {
                 isSearching = false
             }
-
+            
             let items = try await interactor.search(workspaceId: workspace.id, text: searchText)
-
+            
             if !Task.isCancelled {
                 searchedItems = items
             }
@@ -259,5 +298,180 @@ final class WorkspacePresenter {
             print("Erro ao buscar: \(error)")
             searchedItems = []
         }
+    }
+    
+    func load(content: String) {
+        richText = Self.markdownToAttributed(content)
+    }
+    
+    func updateText(_ text: NSAttributedString) {
+        richText = text
+    }
+    
+    func saveContent() -> String {
+        attributedToMarkdown(richText)
+    }
+    
+    
+    func toggleBold(on textView: NSTextView) {
+        
+        let range = textView.selectedRange()
+        
+        guard range.length > 0 else { return }
+        
+        textView.textStorage?.enumerateAttribute(
+            .font,
+            in: range
+        ) { value, subrange, _ in
+            
+            let current =
+            value as? NSFont ??
+                .systemFont(ofSize: 16)
+            
+            let bold =
+            NSFontManager.shared.convert(
+                current,
+                toHaveTrait: .boldFontMask
+            )
+            
+            textView.textStorage?.addAttribute(
+                .font,
+                value: bold,
+                range: subrange
+            )
+        }
+        
+        updateText(textView.attributedString())
+    }
+    
+    func toggleItalic(on textView: NSTextView) {
+        
+        let range = textView.selectedRange()
+        
+        guard range.length > 0 else { return }
+        
+        textView.textStorage?.enumerateAttribute(
+            .font,
+            in: range
+        ) { value, subrange, _ in
+            
+            let current =
+            value as? NSFont ??
+                .systemFont(ofSize: 16)
+            
+            let italic =
+            NSFontManager.shared.convert(
+                current,
+                toHaveTrait: .italicFontMask
+            )
+            
+            textView.textStorage?.addAttribute(
+                .font,
+                value: italic,
+                range: subrange
+            )
+        }
+        
+        updateText(textView.attributedString())
+    }
+    
+    func toggleStrike(on textView: NSTextView) {
+        
+        let range = textView.selectedRange()
+        
+        guard range.length > 0 else { return }
+        
+        textView.textStorage?.addAttribute(
+            .strikethroughStyle,
+            value: NSUnderlineStyle.single.rawValue,
+            range: range
+        )
+        
+        updateText(textView.attributedString())
+    }
+    
+    func changeFontSize(
+        _ size: CGFloat,
+        on textView: NSTextView
+    ) {
+        
+        let range = textView.selectedRange()
+        
+        if range.length > 0 {
+            
+            textView.textStorage?.enumerateAttribute(
+                .font,
+                in: range
+            ) { value, subrange, _ in
+                
+                let current =
+                value as? NSFont ??
+                    .systemFont(ofSize: size)
+                
+                let resized =
+                NSFontManager.shared.convert(
+                    current,
+                    toSize: size
+                )
+                
+                textView.textStorage?.addAttribute(
+                    .font,
+                    value: resized,
+                    range: subrange
+                )
+            }
+            
+        } else {
+            
+            let current =
+            textView.typingAttributes[.font]
+            as? NSFont ??
+                .systemFont(ofSize: size)
+            
+            textView.typingAttributes[.font] =
+            NSFontManager.shared.convert(
+                current,
+                toSize: size
+            )
+        }
+        
+        updateText(textView.attributedString())
+    }
+    
+    func insertBullet(on textView: NSTextView) {
+        
+        textView.insertText(
+            "\n• ",
+            replacementRange:
+                textView.selectedRange()
+        )
+        
+        updateText(textView.attributedString())
+    }
+    
+}
+
+extension WorkspacePresenter {
+    
+    static func markdownToAttributed(
+        _ markdown: String
+    ) -> NSAttributedString {
+        
+        do {
+            let attributed = try AttributedString(
+                markdown: markdown
+            )
+            
+            return NSAttributedString(attributed)
+        } catch {
+            return NSAttributedString(string: markdown)
+        }
+    }
+    
+    func attributedToMarkdown(
+        _ attributed: NSAttributedString
+    ) -> String {
+        
+        attributed.string
     }
 }
