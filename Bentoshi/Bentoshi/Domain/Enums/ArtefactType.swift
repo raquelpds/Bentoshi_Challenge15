@@ -24,7 +24,7 @@ extension ArtefactType {
             return 2
 
         case .archive:
-            return 2
+            return 3
         }
     }
 
@@ -37,7 +37,7 @@ extension ArtefactType {
             return 3
 
         case .archive:
-            return 2
+            return 3
         }
     }
 }

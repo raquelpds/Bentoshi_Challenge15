@@ -19,9 +19,12 @@ struct ArtefactCard: View {
     let onDelete: () -> Void
     let onRevealInFinder: () -> Void
 
+    let onResizeChanged: (CGSize) -> Void
+    let onResizeEnded: (CGSize) -> Void
+
     var body: some View {
 
-        ZStack(alignment: .center) {
+        ZStack(alignment: .bottomTrailing) {
 
             RoundedRectangle(cornerRadius: 15)
                 .fill(
@@ -36,12 +39,37 @@ struct ArtefactCard: View {
                 .font(.headline)
                 .foregroundStyle(.black)
                 .lineLimit(2)
+                .padding()
+
+            Image(systemName: "arrow.down.right")
+                .font(.caption)
+                .foregroundStyle(.white)
+                .padding(8)
+                .background(.black)
+                .clipShape(Circle())
+                .padding(8)
+                .gesture(
+                    DragGesture()
+
+                        .onChanged { value in
+                            onResizeChanged(
+                                value.translation
+                            )
+                        }
+
+                        .onEnded { value in
+                            onResizeEnded(
+                                value.translation
+                            )
+                        }
+                )
         }
         .contentShape(Rectangle())
         .onTapGesture {
             action()
         }
         .contextMenu {
+
             Button("Abrir") {
                 action()
             }
@@ -51,6 +79,7 @@ struct ArtefactCard: View {
             }
 
             if artefact.type == .archive {
+
                 Button("Mostrar no Finder") {
                     onRevealInFinder()
                 }

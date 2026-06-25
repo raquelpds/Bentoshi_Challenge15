@@ -9,33 +9,82 @@ import SwiftUI
 import SwiftData
 
 struct WorkspaceDetailContent: View {
-    
-    //Variaveis adicionadas por Raquel
+
     @Environment(\.modelContext)
     private var modelContext
-    
+
     let workspace: Workspace
     let presenter: WorkspacePresenter
+
     @Binding var route: WorkspaceRoute?
     @Binding var alert: WorkspaceAlert?
-    
-    private let cellSize: CGFloat = 60
-    
-    @State private var dragOffsets: [UUID: CGSize] = [:]
 
-    
+    private let cellSize: CGFloat = 60
+
+    @State private var dragOffsets: [UUID: CGSize] = [:]
+    @State private var resizeOffsets: [UUID: CGSize] = [:]
+
     var body: some View {
 
         ScrollView([.horizontal, .vertical]) {
+
             ZStack(alignment: .topLeading) {
 
-                GridBackground(rows: 25, columns: 25)
+                GridBackground(
+                    rows: 25,
+                    columns: 25
+                )
 
                 ForEach(workspace.artefacts) { artefact in
 
+                    let resizeOffset =
+                        resizeOffsets[artefact.id]
+                        ?? .zero
+
+                    let previewWidth =
+                        CGFloat(
+                            max(
+                                1,
+                                artefact.width
+                                +
+                                Int(
+                                    (
+                                        resizeOffset.width
+                                        / cellSize
+                                    ).rounded()
+                                )
+                            )
+                        ) * cellSize
+
+                    let previewHeight =
+                        CGFloat(
+                            max(
+                                1,
+                                artefact.height
+                                +
+                                Int(
+                                    (
+                                        resizeOffset.height
+                                        / cellSize
+                                    ).rounded()
+                                )
+                            )
+                        ) * cellSize
+
+                    let displayedWidth =
+                        resizeOffset == .zero
+                        ? CGFloat(artefact.width) * cellSize
+                        : previewWidth
+
+                    let displayedHeight =
+                        resizeOffset == .zero
+                        ? CGFloat(artefact.height) * cellSize
+                        : previewHeight
+
                     ArtefactCard(
                         artefact: artefact,
-                        pallete: workspace.coverColor
+                        pallete: workspace.coverColor,
+                        
                     ) {
                         if isValid(artefact) {
                             presenter.open(artefact)
@@ -50,33 +99,66 @@ struct WorkspaceDetailContent: View {
                         } else {
                             presenter.revealArchiveInFinder(artefact)
                         }
+                    } onResizeChanged: { translation in
+                        resizeOffsets[artefact.id] = translation
+                    } onResizeEnded: { translation in
+                        
+                        let deltaWidth = Int(
+                            (translation.width / cellSize)
+                                .rounded()
+                        )
+                        let deltaHeight = Int(
+                            (translation.height / cellSize)
+                                .rounded()
+                        )
+                        resizeArtefact(
+                            artefact,
+                            width: artefact.width + deltaWidth,
+                            height: artefact.height + deltaHeight
+                        )
+                        resizeOffsets[artefact.id] = .zero
                     }
-                    .frame(width: CGFloat(artefact.width) * cellSize, height: CGFloat(artefact.height) * cellSize)
+                    .frame(
+                        width: displayedWidth,
+                        height: displayedHeight
+                    )
                     .position(
-                        x: CGFloat(artefact.column) * cellSize
-                            + CGFloat(artefact.width) * cellSize / 2
+                        x:
+                            CGFloat(artefact.column)
+                            * cellSize
+                            + displayedWidth / 2
                             + (dragOffsets[artefact.id]?.width ?? 0),
 
-                        y: CGFloat(artefact.row) * cellSize
-                            + CGFloat(artefact.height) * cellSize / 2
+                        y:
+                            CGFloat(artefact.row)
+                            * cellSize
+                            + displayedHeight / 2
                             + (dragOffsets[artefact.id]?.height ?? 0)
+                    )
+                    .animation(
+                        .spring(),
+                        value: resizeOffset
                     )
                     .gesture(
                         DragGesture()
-                            .onChanged {
-                                print($0.translation)
-                                dragOffsets[artefact.id] = $0.translation
+                            .onChanged { value in
+                                dragOffsets[artefact.id] =
+                                    value.translation
                             }
                             .onEnded { value in
 
                                 let deltaColumn = Int(
-                                    (value.translation.width / cellSize)
-                                        .rounded()
+                                    (
+                                        value.translation.width
+                                        / cellSize
+                                    ).rounded()
                                 )
 
                                 let deltaRow = Int(
-                                    (value.translation.height / cellSize)
-                                        .rounded()
+                                    (
+                                        value.translation.height
+                                        / cellSize
+                                    ).rounded()
                                 )
 
                                 moveArtefact(
@@ -85,7 +167,7 @@ struct WorkspaceDetailContent: View {
                                     column: artefact.column + deltaColumn
                                 )
 
-                                dragOffsets.removeValue(forKey: artefact.id)
+                                dragOffsets[artefact.id] = .zero
                             }
                     )
                 }
@@ -94,7 +176,7 @@ struct WorkspaceDetailContent: View {
         }
         .navigationTitle(workspace.name)
     }
-    
+
     private func moveArtefact(
         _ artefact: Artefact,
         to row: Int,
@@ -103,33 +185,44 @@ struct WorkspaceDetailContent: View {
 
         artefact.row = row
         artefact.column = column
-        
-        print("ANTES")
-        print(artefact.row)
-        print(artefact.column)
 
         try? modelContext.save()
-        
-        print("DEPOIS")
-        print(artefact.row)
-        print(artefact.column)
     }
-    
+
+    private func resizeArtefact(
+        _ artefact: Artefact,
+        width: Int,
+        height: Int
+    ) {
+
+        artefact.width = max(1, width)
+        artefact.height = max(1, height)
+
+        try? modelContext.save()
+    }
+
     private func isValid(_ artefact: Artefact) -> Bool {
-        if artefact.type == .archive && artefact.checkIsMissingArchivePath() {
+
+        if artefact.type == .archive &&
+            artefact.checkIsMissingArchivePath() {
+
             alert = .missingArchive(artefact)
             return false
         }
-        
-        if artefact.type == .link && !artefact.checkIsLinkValid() {
+
+        if artefact.type == .link &&
+            !artefact.checkIsLinkValid() {
+
             alert = .invalidLink(artefact)
             return false
         }
-        
+
         return true
     }
-    
-    private func handleUpdate(artefact: Artefact){
+
+    private func handleUpdate(
+        artefact: Artefact
+    ) {
         switch artefact.type {
         case .archive:
             route = .updateArchive(artefact)
