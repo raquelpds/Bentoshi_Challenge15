@@ -26,20 +26,16 @@ struct ArtefactCard: View {
 
         ZStack(alignment: .bottomTrailing) {
 
-            RoundedRectangle(cornerRadius: 15)
-                .fill(
-                    ArtefactColorPalette.color(
-                        for: artefact.type,
-                        workspaceBaseColor: pallete,
-                        scheme: colorScheme
-                    )
-                )
+            ArtefactPreview(
+                   artefact: artefact,
+                   palette: pallete
+               )
 
-            Text(artefact.name)
-                .font(.headline)
-                .foregroundStyle(.black)
-                .lineLimit(2)
-                .padding()
+               Text(artefact.name)
+                   .font(.headline)
+                   .foregroundStyle(.white)
+                   .lineLimit(2)
+                   .padding()
 
             Image(systemName: "arrow.down.right")
                 .font(.caption)
@@ -64,7 +60,6 @@ struct ArtefactCard: View {
                         }
                 )
         }
-        .contentShape(Rectangle())
         .onTapGesture {
             action()
         }
