@@ -21,6 +21,8 @@ struct ArtefactCard: View {
 
     let onResizeChanged: (CGSize) -> Void
     let onResizeEnded: (CGSize) -> Void
+    
+    @State private var isHovering = false
 
     var body: some View {
 
@@ -46,13 +48,11 @@ struct ArtefactCard: View {
                 .padding(8)
                 .gesture(
                     DragGesture()
-
                         .onChanged { value in
                             onResizeChanged(
                                 value.translation
                             )
                         }
-
                         .onEnded { value in
                             onResizeEnded(
                                 value.translation
