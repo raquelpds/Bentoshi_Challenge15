@@ -13,6 +13,7 @@ import SwiftUI
 final class Workspace {
     var id: UUID
     var name: String
+    var normalizedName: String
     var coverColor: WorkspaceColor
     var createdAt: Date
     var updatedAt: Date
@@ -27,6 +28,7 @@ final class Workspace {
         self.id = UUID()
         self.createdAt = Date()
         self.updatedAt = Date()
+        self.normalizedName = name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         
         self.name = name
         self.artefacts = []

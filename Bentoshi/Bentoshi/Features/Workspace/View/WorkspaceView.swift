@@ -9,7 +9,6 @@ import SwiftUI
 import SwiftData
 
 enum WorkspaceRoute: Identifiable {
-    case editWorkspace
     case newArchive
     case newLink
     case newText
@@ -19,8 +18,6 @@ enum WorkspaceRoute: Identifiable {
     
     var id: String {
         switch self {
-        case .editWorkspace:
-            "editWorkspace"
         case .newArchive:
             "newArchive"
         case .newLink:
@@ -65,11 +62,40 @@ struct WorkspaceView: View {
     @State private var selectedID: Workspace.ID?
     @State private var route: WorkspaceRoute?
     @State private var alert: WorkspaceAlert?
+    @State private var showColorPickerPopover = false
     
     let workspace: Workspace
+    let sortOption: SortOption
     
     private var current: Workspace {
         workspaces.first { $0.id == selectedID } ?? workspace
+    }
+    
+    init(presenter: WorkspacePresenter, sortOption: SortOption, workspace: Workspace){
+        
+        self.presenter = presenter
+        self.sortOption = sortOption
+        self.workspace = workspace
+        
+        switch sortOption {
+        case .alphabet:
+            _workspaces = Query(
+                sort: \Workspace.normalizedName,
+                order: .forward
+            )
+            
+        case .lastCreated:
+            _workspaces = Query(
+                sort: \Workspace.createdAt,
+                order: .reverse
+            )
+            
+        case .lastModified:
+            _workspaces = Query(
+                sort: \Workspace.updatedAt,
+                order: .reverse
+            )
+        }
     }
     
     var body: some View {
@@ -80,40 +106,43 @@ struct WorkspaceView: View {
                     selectedID: $selectedID
                 )
             } detail: {
-                ZStack {
-                    WorkspaceDetailContent(
-                        workspace: current,
-                        presenter: presenter,
-                        route: $route,
-                        alert: $alert
-                    )
-                    .opacity(isSearchActive ? 0 : 1)
-                    .allowsHitTesting(!isSearchActive)
-                    
-                    WorkspaceSearchContent(
+                VStack {
+                    WorkspaceTitle(
                         workspace: current,
                         presenter: presenter
                     )
-                    .opacity(isSearchActive ? 1 : 0)
-                    .allowsHitTesting(isSearchActive)
+                    
+                    ZStack {
+                        WorkspaceDetailContent(
+                            workspace: current,
+                            presenter: presenter,
+                            route: $route,
+                            alert: $alert
+                        )
+                        .opacity(isSearchActive ? 0 : 1)
+                        .allowsHitTesting(!isSearchActive)
+                        
+                        WorkspaceSearchContent(
+                            workspace: current,
+                            presenter: presenter
+                        )
+                        .opacity(isSearchActive ? 1 : 0)
+                        .allowsHitTesting(isSearchActive)
+                    }
                 }
-                .navigationTitle(current.name)
                 .toolbar {
                     ToolbarItem(placement: .primaryAction) {
-                        SearchToolbarItem(
-                            searchText: $presenter.searchText,
-                            isExpanded: $presenter.isSearchBarExpanded
-                        )
+                        Button {
+                            showColorPickerPopover.toggle()
+                        } label: {
+                            Image(systemName: "paintpalette")
+                        }
+                        .popover(isPresented: $showColorPickerPopover, arrowEdge: .top) {
+                            ColorPickerPopover(workspace: current, presenter: presenter)
+                        }
                     }
-                    
                     ToolbarItem(placement: .primaryAction) {
                         Menu {
-                            Button {
-                                route = .editWorkspace
-                            } label: {
-                                Label("Editar", systemImage: "pencil")
-                            }
-                            
                             Button(role: .destructive) {
                                 alert = .deleteWorkspace
                             } label: {
@@ -139,6 +168,7 @@ struct WorkspaceView: View {
                 }
             }
         }
+        .searchable(text: $presenter.searchText)
         .onChange(of: presenter.searchText) { _, _ in
             presenter.onSearchTextChangedOn(current)
         }
@@ -157,6 +187,7 @@ struct WorkspaceView: View {
         .onAppear {
             selectedID = selectedID ?? workspace.id
         }
+        .navigationTitle("")
     }
     
     private var isSearchActive: Bool {
@@ -186,7 +217,7 @@ extension WorkspaceView {
     struct PreviewWithContextWrapper: View {
         @Environment(\.modelContext) private var context
         var body: some View {
-            WorkspaceBuilder.build(context: context, workspace: Workspace(name: "Teste"))
+            WorkspaceBuilder.build(context: context, sortOption: .alphabet,workspace: Workspace(name: "Teste"))
         }
     }
     

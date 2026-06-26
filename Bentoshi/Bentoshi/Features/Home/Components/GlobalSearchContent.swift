@@ -14,6 +14,7 @@ struct GlobalSearchContent: View {
     @State private var workspaceToNavigate: Workspace?
     
     let presenter: HomePresenter
+    let sortOption: SortOption
     
     private var workspaceResults: [Workspace] {
         presenter.searchedItems.compactMap(\.workspace)
@@ -98,6 +99,7 @@ struct GlobalSearchContent: View {
         .navigationDestination(item: $workspaceToNavigate) { workspace in
             WorkspaceBuilder.build(
                 context: context,
+                sortOption: sortOption,
                 workspace: workspace
             )
         }

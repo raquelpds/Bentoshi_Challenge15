@@ -12,25 +12,33 @@ struct WorkspaceColorSelector: View {
     @Binding var selection: WorkspaceColor
     @Environment(\.colorScheme) private var colorScheme
 
-//    private let columns = [GridItem(.adaptive(minimum: 44), spacing: 12)]
-
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Cor")
                 .font(.subheadline)
 
-            HStack( spacing: 6){
+            HStack(spacing: 10){
                 ForEach(WorkspaceColor.allCases, id: \.self) { color in
-                    Capsule()
-                        .fill(WorkspaceColorPalette.color(for: color, scheme: colorScheme))
-                        .frame(width: 40, height: 20)
-                        .overlay {
+                    Group {
+                        if selection != color {
                             Capsule()
-                                .stroke(Color.primary, lineWidth: selection == color ? 2 : 0)
+                                .fill(WorkspaceColorPalette.color(for: color, scheme: colorScheme))
                         }
-                        .onTapGesture {
-                            selection = color
+                        else {
+                            ZStack {
+                                Capsule()
+                                    .stroke(WorkspaceColorPalette.color(for: color, scheme: colorScheme),
+                                            lineWidth: 3)
+                                Capsule()
+                                    .fill(WorkspaceColorPalette.color(for: color, scheme: colorScheme))
+                                    .frame(width: 48, height: 15)
+                            }
                         }
+                    }
+                    .frame(width: 60, height: 25)
+                    .onTapGesture {
+                        selection = color
+                    }
                 }
             }
         }

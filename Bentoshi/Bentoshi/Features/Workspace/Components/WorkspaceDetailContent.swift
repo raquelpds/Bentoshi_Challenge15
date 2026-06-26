@@ -145,7 +145,7 @@ struct WorkspaceDetailContent: View {
             }
             .padding()
         }
-        .navigationTitle(workspace.name)
+        .navigationTitle("")
     }
 
     private func moveArtefact(
