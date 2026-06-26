@@ -8,12 +8,12 @@
 import Foundation
 
 extension Date {
-    func formatToStringFullDate() -> String {
+    func formatToStringDate() -> String {
         return self.formatted(
             .dateTime
                 .locale(Locale(identifier: "pt_BR"))
                 .day()
-                .month(.wide)
+                .month(.twoDigits)
                 .year()
         )
     }

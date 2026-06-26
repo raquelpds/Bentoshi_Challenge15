@@ -14,38 +14,40 @@ struct WorkspaceCard: View {
     let sortOption: SortOption
     
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             WorkspaceColorPalette.color(for: workspace.coverColor, scheme: colorScheme)
                 .frame(maxWidth: .infinity)
                 .frame(height: 230)
-                .clipShape(RoundedRectangle(cornerRadius: 35))
+                .clipShape(RoundedRectangle(cornerRadius: 36))
             
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     Text(workspace.name)
-                        .font(.headline)
-                        .fontWeight(.semibold)
+                        .font(.title)
+                        .bold()
+                        .fontDesign(.rounded)
                         .lineLimit(1)
                         .truncationMode(.tail)
+                        .foregroundStyle(.primary)
                     
                     Spacer()
                 }
                 
                 HStack(spacing: 4) {
                     Text("\(workspace.artefacts.count) \(workspace.artefacts.count > 1 ? "Itens" : "Item")")
-                        .font(.headline)
-                        .fontWeight(.semibold)
+                        .font(.title3)
                         .foregroundStyle(.secondary)
+                        .fontDesign(.rounded)
                     
                     Text("|")
-                        .font(.headline)
-                        .fontWeight(.semibold)
+                        .font(.title3)
                         .foregroundStyle(.secondary)
+                        .fontDesign(.rounded)
                     
                     Text(dateText)
-                        .font(.headline)
-                        .fontWeight(.semibold)
+                        .font(.title3)
                         .foregroundStyle(.secondary)
+                        .fontDesign(.rounded)
                     
                     Spacer()
                 }
@@ -60,19 +62,19 @@ struct WorkspaceCard: View {
     private var dateText: String {
         let isCreatedSort = sortOption == .lastCreated
         
+        let prefix = isCreatedSort ? "Criado" : "Modificado"
         let date = isCreatedSort ? workspace.createdAt : workspace.updatedAt
         
         if Calendar.current.isDateInToday(date) {
-            return "Hoje"
+            return "\(prefix) hoje"
         }
         
         if Calendar.current.isDateInYesterday(date) {
-            return "Ontem"
+            return "\(prefix) ontem"
         }
         
-        return "\(date.formatToStringFullDate())"
+        return "\(prefix) em \(date.formatToStringDate())"
     }
-    
 }
 
 #Preview("Sort Alphabet") {

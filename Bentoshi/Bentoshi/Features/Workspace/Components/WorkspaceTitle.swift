@@ -26,10 +26,16 @@ struct WorkspaceTitle: View {
     }
     
     var body: some View {
-        Group {
+        HStack(spacing: 16) {
+            Image("BIcon")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 44, height: 32)
+            
             if isEditing {
                 TextField("", text: $name)
                     .font(.largeTitle)
+                    .fontDesign(.rounded)
                     .textFieldStyle(.plain)
                     .focused($isFocused)
                     .onSubmit {
@@ -41,18 +47,17 @@ struct WorkspaceTitle: View {
                         }
                     }
             } else {
-                HStack {
-                    Text(name)
-                        .font(.largeTitle)
-                        .onTapGesture {
-                            isEditing = true
-                            isFocused = true
-                        }
-                        .multilineTextAlignment(.leading)
-                    
-                    Spacer()
-                }
+                Text(name)
+                    .font(.largeTitle)
+                    .fontDesign(.rounded)
+                    .onTapGesture {
+                        isEditing = true
+                        isFocused = true
+                    }
+                    .multilineTextAlignment(.leading)
+                
             }
+            Spacer()
         }
         .padding(24)
     }

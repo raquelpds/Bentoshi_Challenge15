@@ -22,16 +22,33 @@ struct HomeView: View {
     }
     
     var body: some View {
-        ZStack {
-            WorkspacesGrid(presenter: presenter, sortOption: sortOption)
-                .opacity(isSearchActive ? 0 : 1)
-                .allowsHitTesting(!isSearchActive)
+        VStack {
             
-            GlobalSearchContent(presenter: presenter, sortOption: sortOption)
-                .opacity(isSearchActive ? 1 : 0)
-                .allowsHitTesting(isSearchActive)
+            HStack(spacing: 16) {
+                Image("BIcon")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 44, height: 32)
+                
+                Text("Meus Bentoshis")
+                    .font(.largeTitle)
+                    .fontDesign(.rounded)
+                    
+                Spacer()
+            }
+            .padding(24)
+            
+            ZStack {
+                WorkspacesGrid(presenter: presenter, sortOption: sortOption)
+                    .opacity(isSearchActive ? 0 : 1)
+                    .allowsHitTesting(!isSearchActive)
+                
+                GlobalSearchContent(presenter: presenter, sortOption: sortOption)
+                    .opacity(isSearchActive ? 1 : 0)
+                    .allowsHitTesting(isSearchActive)
+            }
         }
-        .navigationTitle("Workspaces")
+        .navigationTitle("")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {

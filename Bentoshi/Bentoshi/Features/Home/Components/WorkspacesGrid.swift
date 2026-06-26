@@ -33,7 +33,7 @@ struct WorkspacesGrid: View {
                 sort: \Workspace.normalizedName,
                 order: .forward
             )
-        
+            
         case .lastCreated:
             _workspaces = Query(
                 sort: \Workspace.createdAt,
@@ -66,15 +66,16 @@ struct WorkspacesGrid: View {
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
-                        Button("Editar") {
+                        Button {
                             workspaceToUpdate = workspace
+                        } label: {
+                            Label("Editar", systemImage: "pencil")
                         }
                         
-                        Divider()
-                        
-                        Button("Excluir", role: .destructive) {
+                        Button(role: .destructive) {
                             workspaceToDelete = workspace
-                            showWorkspaceDeleteAlert = true
+                        } label: {
+                            Label("Apagar", systemImage: "trash")
                         }
                     }
                 }
