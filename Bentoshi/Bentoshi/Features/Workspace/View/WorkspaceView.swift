@@ -8,13 +8,11 @@
 import SwiftUI
 import SwiftData
 
-enum WorkspaceRoute: Identifiable {
+enum WorkspaceSheetRoute: Identifiable {
     case newArchive
     case newLink
-    case newText
     case updateArchive(Artefact)
     case updateLink(Artefact)
-    case updateText(Artefact)
     
     var id: String {
         switch self {
@@ -22,12 +20,22 @@ enum WorkspaceRoute: Identifiable {
             "newArchive"
         case .newLink:
             "newLink"
-        case .newText:
-            "newText"
         case .updateArchive(let artefact):
             "updateArchive-\(artefact.id)"
         case .updateLink(let artefact):
             "updateLink-\(artefact.id)"
+        }
+    }
+}
+
+enum WorkspaceDetailRoute: Identifiable {
+    case newText
+    case updateText(Artefact)
+    
+    var id: String {
+        switch self {
+        case .newText:
+            "newText"
         case .updateText(let artefact):
             "updateText-\(artefact.id)"
         }
@@ -60,7 +68,8 @@ struct WorkspaceView: View {
     
     @State var presenter: WorkspacePresenter
     @State private var selectedID: Workspace.ID?
-    @State private var route: WorkspaceRoute?
+    @State private var sheetRoute: WorkspaceSheetRoute?
+    @State private var detailRoute: WorkspaceDetailRoute?
     @State private var alert: WorkspaceAlert?
     @State private var showColorPickerPopover = false
     
@@ -100,86 +109,73 @@ struct WorkspaceView: View {
     
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            NavigationSplitView {
-                WorkspaceSidebar(
-                    workspaces: workspaces,
-                    selectedID: $selectedID
-                )
-            } detail: {
-                VStack {
-                    WorkspaceTitle(
-                        workspace: current,
-                        presenter: presenter
+            // Se tem detailRoute, mostra 3 colunas. Senão, 2 colunas
+            if detailRoute != nil {
+                NavigationSplitView {
+                    // COLUNA 1: Sidebar com workspaces
+                    WorkspaceSidebar(
+                        workspaces: workspaces,
+                        selectedID: $selectedID
                     )
+                } content: {
+                    // COLUNA 2: Conteúdo do workspace
+                    contentView
                     
-                    ZStack {
-                        WorkspaceDetailContent(
-                            workspace: current,
-                            presenter: presenter,
-                            route: $route,
-                            alert: $alert
-                        )
-                        .opacity(isSearchActive ? 0 : 1)
-                        .allowsHitTesting(!isSearchActive)
-                        
-                        WorkspaceSearchContent(
-                            workspace: current,
-                            presenter: presenter
-                        )
-                        .opacity(isSearchActive ? 1 : 0)
-                        .allowsHitTesting(isSearchActive)
+                    
+                } detail: {
+                    // COLUNA 3: Editor de texto lateral
+                    if let detailRoute = detailRoute {
+                        textEditorPanel(for: detailRoute)
+                            .navigationSplitViewColumnWidth(
+                                min: 400,
+                                ideal: 500,
+                                max: 600
+                            )
                     }
                 }
-                .toolbar {
-                    ToolbarItem(placement: .primaryAction) {
-                        Button {
-                            showColorPickerPopover.toggle()
-                        } label: {
-                            Image(systemName: "paintpalette")
-                        }
-                        .popover(isPresented: $showColorPickerPopover, arrowEdge: .top) {
-                            ColorPickerPopover(workspace: current, presenter: presenter)
-                        }
-                    }
-                    ToolbarItem(placement: .primaryAction) {
-                        Menu {
-                            Button(role: .destructive) {
-                                alert = .deleteWorkspace
-                            } label: {
-                                Label("Excluir", systemImage: "trash")
-                            }
-                        } label: {
-                            Image(systemName: "ellipsis")
-                        }
-                        .menuIndicator(.hidden)
-                    }
+            } else {
+                NavigationSplitView {
+                    // COLUNA 1: Sidebar com workspaces
+                    WorkspaceSidebar(
+                        workspaces: workspaces,
+                        selectedID: $selectedID
+                    )
+                } detail: {
+                    // Só 2 colunas quando sem editor
+                    contentView
+                    
                 }
             }
             
             FloatingAddButton { action in
                 switch action {
                 case .archive:
-                    route = .newArchive
+                    sheetRoute = .newArchive
                 case .text:
-                    route = .newText
-                    break
+                    detailRoute = .newText
                 case .link:
-                    route = .newLink
+                    sheetRoute = .newLink
                 }
             }
+            .opacity(detailRoute == nil ? 1 : 0)
+            .allowsHitTesting(detailRoute == nil)
         }
         .searchable(text: $presenter.searchText)
         .onChange(of: presenter.searchText) { _, _ in
             presenter.onSearchTextChangedOn(current)
         }
+        .onDisappear {
+            // Reseta o editor ao sair do workspace
+            detailRoute = nil
+        }
         .workspaceSheets(
-            route: $route,
+            route: $sheetRoute,
             workspace: current,
             presenter: presenter
         )
         .workspaceAlerts(
             alert: $alert,
-            route: $route,
+            route: $sheetRoute,
             workspace: current,
             presenter: presenter,
             onDeleteWorkspace: deleteCurrentWorkspace
@@ -188,6 +184,97 @@ struct WorkspaceView: View {
             selectedID = selectedID ?? workspace.id
         }
         .navigationTitle("")
+    }
+    
+    private var contentView: some View {
+        VStack {
+            WorkspaceTitle(
+                workspace: current,
+                presenter: presenter
+            )
+            ZStack {
+                WorkspaceDetailContent(
+                    workspace: current,
+                    presenter: presenter,
+                    sheetRoute: $sheetRoute,
+                    detailRoute: $detailRoute,
+                    alert: $alert
+                )
+                .opacity(isSearchActive ? 0 : 1)
+                .allowsHitTesting(!isSearchActive)
+                
+                WorkspaceSearchContent(
+                    workspace: current,
+                    presenter: presenter
+                )
+                .opacity(isSearchActive ? 1 : 0)
+                .allowsHitTesting(isSearchActive)
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showColorPickerPopover.toggle()
+                } label: {
+                    Image(systemName: "paintpalette")
+                }
+                .popover(isPresented: $showColorPickerPopover, arrowEdge: .top) {
+                    ColorPickerPopover(workspace: current, presenter: presenter)
+                }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    Button(role: .destructive) {
+                        alert = .deleteWorkspace
+                    } label: {
+                        Label("Excluir", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                }
+                .menuIndicator(.hidden)
+            }
+        }
+        
+    }
+    
+    @ViewBuilder
+    private func textEditorPanel(for route: WorkspaceDetailRoute) -> some View {
+        switch route {
+        case .newText:
+            TextEditorSheet(
+                mode: .create,
+                onSave: { title, formattedText in
+                    Task {
+                        await presenter.addArtefact(
+                            to: current,
+                            payload: .text(title: title, content: formattedText)
+                        )
+                        detailRoute = nil
+                    }
+                },
+                onCancel: {
+                    detailRoute = nil
+                }
+            )
+            
+        case .updateText(let artefact):
+            TextEditorSheet(
+                mode: .edit(artefact),
+                onSave: { title, formattedText in
+                    Task {
+                        await presenter.updateArtefact(
+                            artefact,
+                            payload: .text(newTitle: title, newContent: formattedText)
+                        )
+                        detailRoute = nil
+                    }
+                },
+                onCancel: {
+                    detailRoute = nil
+                }
+            )
+        }
     }
     
     private var isSearchActive: Bool {

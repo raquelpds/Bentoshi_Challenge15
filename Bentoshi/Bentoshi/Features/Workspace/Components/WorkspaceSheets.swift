@@ -3,12 +3,13 @@
 //  Bentoshi
 //
 //  Created by Lizandra Malta on 20/06/26.
-//
+
 
 import SwiftUI
 
 struct WorkspaceSheetsModifier: ViewModifier {
-    @Binding var route: WorkspaceRoute?
+    @Binding var route: WorkspaceSheetRoute?
+    
     let workspace: Workspace
     let presenter: WorkspacePresenter
     
@@ -21,7 +22,10 @@ struct WorkspaceSheetsModifier: ViewModifier {
                         Task {
                             await presenter.addArtefact(
                                 to: workspace,
-                                payload: .archive(url: fileUrl, name: fileName)
+                                payload: .archive(
+                                    url: fileUrl,
+                                    name: fileName
+                                )
                             )
                         }
                     }
@@ -31,17 +35,11 @@ struct WorkspaceSheetsModifier: ViewModifier {
                         Task {
                             await presenter.addArtefact(
                                 to: workspace,
-                                payload: .link(url: url, name: name)
+                                payload: .link(
+                                    url: url,
+                                    name: name
+                                )
                             )
-                        }
-                    }
-                    
-                case .newText:
-                    TextEditorSheet(mode: .create) { title, content in
-                        Task {
-                            await presenter.addArtefact(
-                                to: workspace,
-                                payload: .text(title: title, content: content))
                         }
                     }
                     
@@ -70,19 +68,6 @@ struct WorkspaceSheetsModifier: ViewModifier {
                             )
                         }
                     }
-                    
-                case .updateText(let artefact):
-                    TextEditorSheet(mode: .edit(artefact)) { title, content in
-                        Task {
-                            await presenter.updateArtefact(
-                                artefact,
-                                payload: .text(
-                                    newTitle: title,
-                                    newContent: content
-                                )
-                            )
-                        }
-                    }
                 }
             }
     }
@@ -90,15 +75,15 @@ struct WorkspaceSheetsModifier: ViewModifier {
 
 extension View {
     func workspaceSheets(
-        route: Binding<WorkspaceRoute?>,
+        route: Binding<WorkspaceSheetRoute?>,
         workspace: Workspace,
-        presenter: WorkspacePresenter,
+        presenter: WorkspacePresenter
     ) -> some View {
         modifier(
             WorkspaceSheetsModifier(
                 route: route,
                 workspace: workspace,
-                presenter: presenter,
+                presenter: presenter
             )
         )
     }

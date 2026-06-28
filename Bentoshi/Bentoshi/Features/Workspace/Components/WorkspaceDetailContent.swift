@@ -16,7 +16,8 @@ struct WorkspaceDetailContent: View {
     let workspace: Workspace
     let presenter: WorkspacePresenter
 
-    @Binding var route: WorkspaceRoute?
+    @Binding var sheetRoute: WorkspaceSheetRoute?
+    @Binding var detailRoute: WorkspaceDetailRoute?
     @Binding var alert: WorkspaceAlert?
 
     private let cellSize: CGFloat = 60
@@ -59,7 +60,7 @@ struct WorkspaceDetailContent: View {
                         
                     ) {
                         if artefact.type == .text {
-                            route = .updateText(artefact)
+                            detailRoute = .updateText(artefact)
                         }
                         else if (isValid(artefact)){
                             presenter.open(artefact)
@@ -268,11 +269,11 @@ struct WorkspaceDetailContent: View {
     ) {
         switch artefact.type {
         case .archive:
-            route = .updateArchive(artefact)
+            sheetRoute = .updateArchive(artefact)
         case .link:
-            route = .updateLink(artefact)
+            sheetRoute = .updateLink(artefact)
         case .text:
-            route = .updateText(artefact)
+            detailRoute = .updateText(artefact)
         }
     }
 }
