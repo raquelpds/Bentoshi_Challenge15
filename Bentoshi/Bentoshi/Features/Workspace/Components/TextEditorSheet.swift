@@ -47,26 +47,31 @@ struct TextEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     let mode: Mode
-    var onSave: (_ title: String, _ formattedText: NSAttributedString) -> Void
+        var onSave: (_ title: String, _ formattedText: NSAttributedString) -> Void
+        var onCancel: (() -> Void)?
 
-    init(
-        mode: Mode = .create,
-        onSave: @escaping (_ title: String, _ formattedText: NSAttributedString) -> Void
-    ) {
-        self.mode = mode
-        self.onSave = onSave
+        init(
+            mode: Mode = .create,
+            onSave: @escaping (_ title: String, _ formattedText: NSAttributedString) -> Void,
+            onCancel: (() -> Void)? = nil
+        ) {
+            self.mode = mode
+            self.onSave = onSave
+            self.onCancel = onCancel
 
-        _title = State(initialValue: mode.initialTitle)
-        _text = State(
-            initialValue: mode.initialText
-        )
-    }
+            _title = State(initialValue: mode.initialTitle)
+            _text = State(initialValue: mode.initialText)
+        }
 
     var body: some View {
         VStack(alignment: .center, spacing: 12) {
-            Text(mode.title)
-                .font(.title2)
-                .fontWeight(.semibold)
+            HStack {
+                Text(mode.title)
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                
+                Spacer()
+            }
 
             // Campo para digitar/editar o título do texto
             TextField("Título do texto", text: $title)
@@ -83,7 +88,6 @@ struct TextEditorSheet: View {
             footer
         }
         .padding()
-        .frame(width: 760, height: 560)
     }
 
     private var editor: some View {
@@ -98,63 +102,92 @@ struct TextEditorSheet: View {
     }
 
     private var toolbar: some View {
-        HStack(spacing: 8) {
-            formatButton("B") { applyBold() }
-            formatButton("I") { applyItalic() }
-            formatButton("S") { applyStrike() }
+        HStack(spacing: 4) {
+            // Estilos Inline (Negrito, Itálico, Tachado)
+            HStack(spacing: 2) {
+                formatIconButton("bold", systemImage: "bold") { applyBold() }
+                formatIconButton("italic", systemImage: "italic") { applyItalic() }
+                formatIconButton("strikethrough", systemImage: "strikethrough") { applyStrike() }
+            }
+            .padding(2)
+            .background(Color(nsColor: .controlBackgroundColor))
+            .clipShape(RoundedRectangle(cornerRadius: 6))
 
-            Divider().frame(height: 20)
+            Divider().frame(height: 16)
 
-            formatButton("Title") { applyTitle() }
-            
-            formatButton("Heading") { applyHeading() }
-            
-            formatButton("Subheading") { applySubheading() }
-            
-            formatButton("Body") { applyBody() }
+            // Menu Dropdown para Formatações de Bloco (Poupe espaço de tela!)
+            Menu {
+                Button("Título Principal") { applyTitle() }
+                Button("Título") { applyHeading() }
+                Button("Subtítulo") { applySubheading() }
+                Button("Corpo de Texto") { applyBody() }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "textformat.size")
+                    Text("Formato")
+                        .font(.system(size: 11))
+                }
+            }
+            .menuStyle(.borderlessButton)
+            .frame(width: 90)
 
-            Divider().frame(height: 20)
+            Divider().frame(height: 16)
 
-            formatButton("•") { insertBullet() }
-            formatButton("-") { insertDash() }
-            formatButton("1.") { insertNumberedList() }
+            // Listas e Marcadores
+            HStack(spacing: 2) {
+                formatIconButton("bullet", systemImage: "list.bullet") { insertBullet() }
+                formatIconButton("dash", systemImage: "minus") { insertDash() }
+                formatIconButton("number", systemImage: "list.number") { insertNumberedList() }
+            }
+            .padding(2)
+            .background(Color(nsColor: .controlBackgroundColor))
+            .clipShape(RoundedRectangle(cornerRadius: 6))
 
             Spacer()
         }
-        .padding(10)
-        .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(6)
+        .background(.thinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     private var footer: some View {
-        HStack {
-            Button("Cancelar") {
-                dismiss()
-            }
-
+        HStack(spacing: 12) {
             Spacer()
+            
+            Button("Cancelar") {
+                cancelAction()
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.regular)
 
             Button("Salvar") {
-                // Passando o título e o conteúdo em markdown agora que o fechamento exige ambos
                 onSave(title, text)
                 dismiss()
             }
             .buttonStyle(.borderedProminent)
-            .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) // Opcional: Desabilita se o título estiver vazio
+            .controlSize(.regular)
+            .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
     }
 
-    private func formatButton(
+    private func cancelAction() {
+        if let onCancel = onCancel {
+            onCancel()
+        }
+        dismiss()
+    }
+
+    // Helper para botões de ícone ultra-compactos e limpos
+    private func formatIconButton(
         _ title: String,
+        systemImage: String,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            Text(title)
-                .font(.system(size: 13, weight: .semibold))
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(Color(nsColor: .controlBackgroundColor))
-                .clipShape(Capsule())
+            Image(systemName: systemImage)
+                .font(.system(size: 11, weight: .medium))
+                .frame(width: 24, height: 22)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }

@@ -3,7 +3,7 @@
 //  Bentoshi
 //
 //  Created by Lizandra Malta on 20/06/26.
-//
+
 
 import SwiftUI
 
@@ -100,4 +100,3 @@ extension View {
         )
     }
 }
-
