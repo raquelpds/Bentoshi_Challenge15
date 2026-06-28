@@ -9,7 +9,7 @@ import SwiftUI
 
 struct WorkspaceAlertsModifier: ViewModifier {
     @Binding var alert: WorkspaceAlert?
-    @Binding var route: WorkspaceRoute?
+    @Binding var route: WorkspaceSheetRoute?
     
     let workspace: Workspace
     let presenter: WorkspacePresenter
@@ -76,7 +76,7 @@ struct WorkspaceAlertsModifier: ViewModifier {
 extension View {
     func workspaceAlerts(
         alert: Binding<WorkspaceAlert?>,
-        route: Binding<WorkspaceRoute?>,
+        route: Binding<WorkspaceSheetRoute?>,
         workspace: Workspace,
         presenter: WorkspacePresenter,
         onDeleteWorkspace: @escaping () -> Void

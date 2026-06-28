@@ -8,14 +8,12 @@
 import SwiftUI
 import SwiftData
 
-enum WorkspaceRoute: Identifiable {
+enum WorkspaceSheetRoute: Identifiable {
     case editWorkspace
     case newArchive
     case newLink
-    case newText
     case updateArchive(Artefact)
     case updateLink(Artefact)
-    case updateText(Artefact)
     
     var id: String {
         switch self {
@@ -25,12 +23,22 @@ enum WorkspaceRoute: Identifiable {
             "newArchive"
         case .newLink:
             "newLink"
-        case .newText:
-            "newText"
         case .updateArchive(let artefact):
             "updateArchive-\(artefact.id)"
         case .updateLink(let artefact):
             "updateLink-\(artefact.id)"
+        }
+    }
+}
+
+enum WorkspaceDetailRoute {
+    case newText
+    case updateText(Artefact)
+    
+    var id: String {
+        switch self {
+        case .newText:
+            "newText"
         case .updateText(let artefact):
             "updateText-\(artefact.id)"
         }
@@ -63,7 +71,8 @@ struct WorkspaceView: View {
     
     @State var presenter: WorkspacePresenter
     @State private var selectedID: Workspace.ID?
-    @State private var route: WorkspaceRoute?
+    @State private var sheetRoute: WorkspaceSheetRoute?
+    @State private var detailRoute: WorkspaceDetailRoute?
     @State private var alert: WorkspaceAlert?
     
     let workspace: Workspace
@@ -84,7 +93,8 @@ struct WorkspaceView: View {
                     WorkspaceDetailContent(
                         workspace: current,
                         presenter: presenter,
-                        route: $route,
+                        sheetRoute: $sheetRoute,
+                        detailRoute: $detailRoute,
                         alert: $alert
                     )
                     .opacity(isSearchActive ? 0 : 1)
@@ -109,7 +119,7 @@ struct WorkspaceView: View {
                     ToolbarItem(placement: .primaryAction) {
                         Menu {
                             Button {
-                                route = .editWorkspace
+                                sheetRoute = .editWorkspace
                             } label: {
                                 Label("Editar", systemImage: "pencil")
                             }
@@ -130,12 +140,12 @@ struct WorkspaceView: View {
             FloatingAddButton { action in
                 switch action {
                 case .archive:
-                    route = .newArchive
+                    sheetRoute = .newArchive
                 case .text:
-                    route = .newText
+                    detailRoute = .newText
                     break
                 case .link:
-                    route = .newLink
+                    sheetRoute = .newLink
                 }
             }
         }
@@ -143,13 +153,13 @@ struct WorkspaceView: View {
             presenter.onSearchTextChangedOn(current)
         }
         .workspaceSheets(
-            route: $route,
+            route: $sheetRoute,
             workspace: current,
             presenter: presenter
         )
         .workspaceAlerts(
             alert: $alert,
-            route: $route,
+            route: $sheetRoute,
             workspace: current,
             presenter: presenter,
             onDeleteWorkspace: deleteCurrentWorkspace
