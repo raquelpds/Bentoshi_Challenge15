@@ -25,9 +25,11 @@ final class Artefact {
     var createdAt: Date
     var updatedAt: Date
     
-    var row: Int
-    var column: Int
+    //aqui é pra armazenar quais células da grid o artefato usa
+    var gridRow: Int
+    var gridColumn: Int
     
+    //aqui é pra armazenar a altura e largura do artefato após o usuário redimensionar o artefato.
     var width: Int
     var height: Int
     
@@ -57,8 +59,8 @@ final class Artefact {
 
         self.workspaceId = workspaceId
         
-        self.row = row
-        self.column = column
+        self.gridRow = row
+        self.gridColumn = column
 
         self.width = width
         self.height = height

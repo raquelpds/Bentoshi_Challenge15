@@ -51,14 +51,23 @@ final class WorkspacePresenter {
         }
     }
     
-    func updateWorkspace(_ workspace: Workspace, newName: String, newCoverColor: WorkspaceColor) async {
+    func updateWorkspaceName(_ workspace: Workspace, newName: String) async {
         do {
             workspace.name = newName
+            
+            try await interactor.updateWorkspace(workspace)
+        } catch {
+            print("Erro ao atualizar nome do workspace")
+        }
+    }
+    
+    func updateWorkspaceCoverColor(_ workspace: Workspace, newCoverColor: WorkspaceColor) async {
+        do {
             workspace.coverColor = newCoverColor
             
             try await interactor.updateWorkspace(workspace)
         } catch {
-            print("Erro ao atualizar workspace")
+            print("Erro ao atualizar cor da capa do workspace")
         }
     }
     
@@ -103,8 +112,8 @@ final class WorkspacePresenter {
                 workspaceId: workspace.id,
                 row: 0,
                 column: 0,
-                width: ArtefactType.archive.defaultWidth,
-                height: ArtefactType.archive.defaultHeight,
+                width: ArtefactType.archive.initialWidth,
+                height: ArtefactType.archive.initialHeight,
                 bookmark: bookmark
             )
             
@@ -125,8 +134,8 @@ final class WorkspacePresenter {
                 workspaceId: workspace.id,
                 row: 0,
                 column: 0,
-                width: ArtefactType.link.defaultWidth,
-                height: ArtefactType.link.defaultHeight
+                width: ArtefactType.link.initialWidth,
+                height: ArtefactType.link.initialHeight
             )
             
             workspace.artefacts.append(artefact)
@@ -146,8 +155,8 @@ final class WorkspacePresenter {
                 workspaceId: workspace.id,
                 row: 0,
                 column: 0,
-                width: ArtefactType.text.defaultWidth,
-                height: ArtefactType.text.defaultHeight,
+                width: ArtefactType.text.initialWidth,
+                height: ArtefactType.text.initialHeight,
                 formattedText: content
             )
             

@@ -17,18 +17,6 @@ struct WorkspaceSheetsModifier: ViewModifier {
         content
             .sheet(item: $route) { route in
                 switch route {
-                    
-                case .editWorkspace:
-                    WorkspaceFormView(mode: .edit(workspace)) { workspace, name, color in
-                        Task {
-                            await presenter.updateWorkspace(
-                                workspace,
-                                newName: name,
-                                newCoverColor: color
-                            )
-                        }
-                    }
-                    
                 case .newArchive:
                     FilePicker(mode: .create) { fileUrl, fileName in
                         Task {
