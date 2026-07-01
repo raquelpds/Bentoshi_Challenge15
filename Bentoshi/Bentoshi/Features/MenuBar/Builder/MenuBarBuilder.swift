@@ -16,7 +16,7 @@ enum MenuBarBuilder {
         let workspaceService: WorkspaceServiceProtocol = WorkspaceService(context: context)
 
         let interactor = MenuBarInteractor(
-            workspaceService: workspaceService,
+            workspaceService: workspaceService
         )
 
         return MenuBarPresenter(

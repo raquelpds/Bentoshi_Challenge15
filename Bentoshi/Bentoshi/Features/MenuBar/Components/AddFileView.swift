@@ -6,142 +6,186 @@
 //
 
 import SwiftUI
+import QuickLookThumbnailing
+import UniformTypeIdentifiers
 
 struct AddFileView: View {
-    @State private var fileUrl: URL?
+
     @State private var isHovering = false
-    @State private var fileName = ""
-    
+
     let presenter: MenuBarPresenter
-    let workspace: Workspace
+    let workspaces: [Workspace]
+
+    @Binding var selectedWorkspace: Workspace?
+    @Binding var newFileUrl: URL?
+    @Binding var newFileName: String
 
     var body: some View {
-        VStack(spacing: 24) {
-            // Área de Drag & Drop
-            VStack {
-                if let file = fileUrl {
+        VStack(spacing: 20) {
 
-                    HStack {
-                        Spacer()
+            // Área de drag & drop
+            VStack(spacing: 14) {
 
-                        Button {
-                            self.fileUrl = nil
-                            self.fileName = ""
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.title3)
-                                .foregroundStyle(.secondary)
-                        }
-                        .buttonStyle(.plain)
+                if let file = newFileUrl {
+
+                    VStack(spacing: 4) {
+
+                        FilePreview(url: file)
+                            .frame(width: 50, height: 60)
+
+                        Text(file.lastPathComponent)
+                            .font(.headline)
+                            .lineLimit(1)
+                            .padding(.bottom, 20)
+
+                        Text("\(fileType(for: file)) - \(fileSize(for: file))")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
 
-                    Spacer()
-
-                    Image(systemName: "doc.fill")
-                        .font(.system(size: 55))
-                        .foregroundStyle(.blue)
-
-                    Text(file.lastPathComponent)
-                        .font(.headline)
-
-                    Text("Arquivo selecionado")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-
-                    Spacer()
-
                 } else {
-                    Spacer()
 
                     Image(systemName: "tray.and.arrow.down.fill")
-                        .font(.system(size: 50))
-                        .foregroundStyle(
-                            isHovering ? .blue : .secondary
-                        )
+                        .font(.system(size: 30))
+                        .foregroundStyle(isHovering || newFileUrl != nil ? .blue : .secondary)
 
-                    Text(
-                        isHovering
-                        ? "Solte o arquivo aqui"
-                        : "Arraste seu arquivo para cá"
-                    )
-                    .font(.headline)
-
-                    Text("ou selecione um arquivo")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-
-                    Spacer()
+                    Text(isHovering ? "Solte o arquivo aqui" : "Arraste um arquivo")
+                        .font(.title3)
+                        .fontWeight(.medium)
                 }
+
             }
-            .frame(height: 200)
             .frame(maxWidth: .infinity)
+            .frame(height: newFileUrl != nil ? 200 : 140)
             .background(.regularMaterial)
             .overlay {
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(
-                        isHovering ? .blue : .gray.opacity(0.4),
-                        style: StrokeStyle(
-                            lineWidth: 2,
-                            dash: [8]
-                        )
-                    )
+                if isHovering || newFileUrl != nil {
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(.blue, style: StrokeStyle(lineWidth: 2))
+                } else {
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(.gray.opacity(0.5), style: StrokeStyle(lineWidth: 2, dash: [8]))
+                }
             }
             .clipShape(RoundedRectangle(cornerRadius: 16))
 
-            // Nome do arquivo
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Nome do arquivo")
-                    .font(.headline)
+            VStack(spacing: 14) {
 
-                TextField(
-                    "Digite um nome",
-                    text: $fileName
-                )
-                .textFieldStyle(.roundedBorder)
-            }
+                HStack {
+                    Text("Workspace:")
+                        .foregroundStyle(.secondary)
+                        .frame(width: 90, alignment: .trailing)
 
-            // Botão
-                Button {
-                    Task {
-                        guard let fileUrl = self.fileUrl else { return }
-
-                        do {
-                            await presenter.addArtefact(to: workspace, payload: .archive(url: fileUrl, name: fileName))
-                            
-                            self.fileName = ""
-                            self.fileUrl = nil
-                        } catch {
-                            print(error)
+                    Picker("", selection: $selectedWorkspace) {
+                        ForEach(workspaces) { workspace in
+                            Text(workspace.name)
+                                .tag(workspace as Workspace?)
                         }
                     }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
 
-                } label: {
-
-                    Label(
-                        "Adicionar ao Workspace",
-                        systemImage: "plus.circle.fill"
-                    )
-                    .frame(maxWidth: .infinity)
+                    Spacer()
                 }
-                .buttonStyle(.borderedProminent)
-                .disabled(fileUrl == nil || fileName.isEmpty)
-            
+
+                HStack {
+                    Text("Nome:")
+                        .foregroundStyle(.secondary)
+                        .frame(width: 90, alignment: .trailing)
+
+                    TextField("Digite um nome", text: $newFileName)
+                        .textFieldStyle(.roundedBorder)
+                        .controlSize(.large)
+
+                    Spacer()
+                }
+            }
+
         }
         .padding(24)
         .frame(width: 400)
-        .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .dropDestination(for: URL.self) { items, _ in
 
-            self.fileUrl = items.first
-            self.fileName = self.fileUrl?.lastPathComponent ?? ""
+            guard let file = items.first else {
+                return false
+            }
+
+            newFileUrl = file
+            newFileName = file.lastPathComponent
 
             return true
 
         } isTargeted: { hovering in
-
             isHovering = hovering
+        }
+    }
+    
+    private func fileType(for url: URL) -> String {
 
+        guard
+            let type = UTType(filenameExtension: url.pathExtension)
+        else {
+            return url.pathExtension.uppercased()
+        }
+
+        return type.localizedDescription ?? url.pathExtension.uppercased()
+    }
+    
+    private func fileSize(for url: URL) -> String {
+        
+        guard
+            let values = try? url.resourceValues(forKeys: [.fileSizeKey]),
+            let size = values.fileSize
+        else {
+            return ""
+        }
+
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+
+        return formatter.string(fromByteCount: Int64(size))
+    }
+}
+
+
+
+struct FilePreview: View {
+
+    let url: URL
+
+    @State private var image: NSImage?
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(nsImage: image)
+                    .resizable()
+                    .scaledToFit()
+            } else {
+                ProgressView()
+            }
+        }
+        .task {
+            await loadThumbnail()
+        }
+    }
+
+    @MainActor
+    private func loadThumbnail() async {
+
+        let request = QLThumbnailGenerator.Request(
+            fileAt: url,
+            size: CGSize(width: 180, height: 180),
+            scale: NSScreen.main?.backingScaleFactor ?? 2,
+            representationTypes: .thumbnail
+        )
+
+        do {
+            let thumbnail = try await QLThumbnailGenerator.shared.generateBestRepresentation(for: request)
+            image = thumbnail.nsImage
+        } catch {
+            print(error)
         }
     }
 }
