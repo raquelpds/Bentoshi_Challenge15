@@ -297,19 +297,18 @@ extension Artefact {
     }
 }
 
-extension Artefact {
-    
-///você deve capturar o caminho do arquivo (URL), inicializar o NSImage com ele e, em seguida, exibi-lo em um componente de visualização
-    var previewImage: NSImage? {
-        guard let url = archiveUrl else {
-            return nil
-        }
-        let didAccess = url.startAccessingSecurityScopedResource()
-        defer {
-            if didAccess {
-                url.stopAccessingSecurityScopedResource()
-            }
-        }
-        return NSImage(contentsOf: url)
-    }
-}
+//extension Artefact {
+/////você deve capturar o caminho do arquivo (URL), inicializar o NSImage com ele e, em seguida, exibi-lo em um componente de visualização
+//    var previewImage: NSImage? {
+//        guard let url = archiveUrl else {
+//            return nil
+//        }
+//        let didAccess = url.startAccessingSecurityScopedResource()
+//        defer {
+//            if didAccess {
+//                url.stopAccessingSecurityScopedResource()
+//            }
+//        }
+//        return NSImage(contentsOf: url)
+//    }
+//}
