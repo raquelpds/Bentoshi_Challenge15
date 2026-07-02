@@ -21,6 +21,10 @@ struct HomeView: View {
         set { sortOptionRaw = newValue.rawValue }
     }
     
+    private var hasWorkspaces: Bool {
+        !workspaces.isEmpty
+    }
+    
     var body: some View {
         VStack {
             
@@ -38,10 +42,18 @@ struct HomeView: View {
             }
             .padding(24)
             
+            
             ZStack {
                 WorkspacesGrid(presenter: presenter, sortOption: sortOption)
                     .opacity(isSearchActive ? 0 : 1)
                     .allowsHitTesting(!isSearchActive)
+                
+            //MARK: - Estado de EmptyState
+            ///esse overlay aqui serve para mostrar o emptyState da HomeView.
+                if workspaces.isEmpty {
+                    HomeEmptyState()
+                        .allowsHitTesting(false)
+                }
                 
                 GlobalSearchContent(presenter: presenter, sortOption: sortOption)
                     .opacity(isSearchActive ? 1 : 0)
