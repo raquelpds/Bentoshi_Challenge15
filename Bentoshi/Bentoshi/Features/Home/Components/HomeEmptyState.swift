@@ -32,7 +32,6 @@ struct HomeEmptyState: View {
                 Image("mascot")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 400, height: 700)
             }
         }
     }
