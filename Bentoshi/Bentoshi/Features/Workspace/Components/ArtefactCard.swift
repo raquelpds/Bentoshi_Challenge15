@@ -34,11 +34,11 @@ struct ArtefactCard: View {
                )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-               Text(artefact.name)
-                   .font(.headline)
-                   .foregroundStyle(.white)
-                   .lineLimit(2)
-                   .padding()
+//               Text(artefact.name)
+//                   .font(.headline)
+//                   .foregroundStyle(.white)
+//                   .lineLimit(2)
+//                   .padding()
 
             Image(systemName: "arrow.down.right")
                 .font(.caption)

@@ -36,9 +36,19 @@ struct ArtefactPreview: View {
                 .cornerRadius(15)
                 .overlay(alignment: .bottom) {
                     if isHovering {
-                        Color.black.opacity(0.4)
-                            .frame(height: 48)
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                        ZStack(alignment: .leading) {
+                            Color.black.opacity(0.4)
+                                .frame(height: 48)
+
+                            Text(artefact.name)
+                                .font(.headline)
+                                .foregroundStyle(.white)
+                                .lineLimit(2)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
                 .clipped()
@@ -103,10 +113,7 @@ struct ArtefactPreview: View {
         let verticalPadding: CGFloat = 32
         let lineHeight: CGFloat = 18
         
-        return max(
-            1,
-            Int((height - verticalPadding) / lineHeight)
-        )
+        return max(1, Int((height - verticalPadding) / lineHeight))
     }
     
     private var backgroundColor: Color {
