@@ -19,7 +19,7 @@ struct HomeEmptyState: View {
             
             Text("""
             Clique no "+" para adicionar
-            um novo Bentoshi
+            um novo Bentochi
             """)
             .font(.system(size: 26))
             .multilineTextAlignment(.center)
