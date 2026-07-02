@@ -74,6 +74,7 @@ struct WorkspacesGrid: View {
                         
                         Button(role: .destructive) {
                             workspaceToDelete = workspace
+                            showWorkspaceDeleteAlert = true
                         } label: {
                             Label("Apagar", systemImage: "trash")
                         }
