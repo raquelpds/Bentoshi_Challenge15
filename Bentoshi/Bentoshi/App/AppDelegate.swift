@@ -19,8 +19,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         
         if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "star", accessibilityDescription: "Menu")
-            // Define a ação do clique no ícone
+            button.image = NSImage(named: "MenuBarIcon")            // Define a ação do clique no ícone
             button.action = #selector(toggleMenuBarWindow)
             button.target = self
         }
