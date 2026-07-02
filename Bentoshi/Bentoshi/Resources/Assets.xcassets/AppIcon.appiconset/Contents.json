@@ -1,54 +1,61 @@
 {
   "images" : [
     {
+      "filename" : "Frame 100.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "16x16"
     },
     {
+      "filename" : "Frame 99.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "16x16"
     },
     {
+      "filename" : "Frame 98.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "32x32"
     },
     {
+      "filename" : "Frame 97.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "32x32"
     },
     {
+      "filename" : "Frame 95.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "128x128"
     },
     {
+      "filename" : "Frame 103.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "128x128"
     },
     {
+      "filename" : "Frame 101.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "256x256"
     },
     {
-      "filename" : "ChatGPT Image Jun 29, 2026 at 12_39_31 PM_512x512.png",
+      "filename" : "Frame 104.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "256x256"
     },
     {
-      "filename" : "ChatGPT Image Jun 29, 2026 at 12_39_31 PM_512x512 1.png",
+      "filename" : "Frame 105.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "512x512"
     },
     {
-      "filename" : "ChatGPT Image Jun 29, 2026 at 12_39_31 PM_1024x1024.png",
+      "filename" : "Frame 102.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "512x512"

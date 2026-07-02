@@ -28,21 +28,6 @@ struct HomeView: View {
     var body: some View {
         VStack {
             
-            HStack(spacing: 16) {
-                Image("BIcon")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 44, height: 32)
-                
-                Text("Meus Bentoshis")
-                    .font(.largeTitle)
-                    .fontDesign(.rounded)
-                    
-                Spacer()
-            }
-            .padding(24)
-            
-            
             ZStack {
                 WorkspacesGrid(presenter: presenter, sortOption: sortOption)
                     .opacity(isSearchActive ? 0 : 1)
@@ -60,7 +45,7 @@ struct HomeView: View {
                     .allowsHitTesting(isSearchActive)
             }
         }
-        .navigationTitle("")
+        .navigationTitle("Bentochi")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
