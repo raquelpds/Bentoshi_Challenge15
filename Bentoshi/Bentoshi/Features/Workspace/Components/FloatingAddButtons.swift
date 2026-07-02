@@ -42,7 +42,7 @@ struct FloatingAddButton: View {
                 Image(systemName: "plus")
                     .font(.largeTitle)
                     .frame(width: 60, height: 60)
-                    .background(.blue)
+                    .background(Color(nsColor: .controlAccentColor))
                     .foregroundStyle(.white)
                     .clipShape(Circle())
                     .shadow(radius: 6)
