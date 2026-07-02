@@ -21,25 +21,24 @@ struct ArtefactCard: View {
 
     let onResizeChanged: (CGSize) -> Void
     let onResizeEnded: (CGSize) -> Void
+    
+    @State private var isHovering = false
 
     var body: some View {
 
         ZStack(alignment: .bottomTrailing) {
 
-            RoundedRectangle(cornerRadius: 15)
-                .fill(
-                    ArtefactColorPalette.color(
-                        for: artefact.type,
-                        workspaceBaseColor: pallete,
-                        scheme: colorScheme
-                    )
-                )
+            ArtefactPreview(
+                   artefact: artefact,
+                   palette: pallete
+               )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            Text(artefact.name)
-                .font(.headline)
-                .foregroundStyle(.black)
-                .lineLimit(2)
-                .padding()
+               Text(artefact.name)
+                   .font(.headline)
+                   .foregroundStyle(.white)
+                   .lineLimit(2)
+                   .padding()
 
             Image(systemName: "arrow.down.right")
                 .font(.caption)
@@ -50,13 +49,11 @@ struct ArtefactCard: View {
                 .padding(8)
                 .gesture(
                     DragGesture()
-
                         .onChanged { value in
                             onResizeChanged(
                                 value.translation
                             )
                         }
-
                         .onEnded { value in
                             onResizeEnded(
                                 value.translation
@@ -64,7 +61,6 @@ struct ArtefactCard: View {
                         }
                 )
         }
-        .contentShape(Rectangle())
         .onTapGesture {
             action()
         }
