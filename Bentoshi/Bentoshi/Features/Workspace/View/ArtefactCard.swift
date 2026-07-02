@@ -10,11 +10,15 @@ import SwiftUI
 struct ArtefactCard: View {
 
     @Environment(\.colorScheme) private var colorScheme
-
+    
     let artefact: Artefact
     let pallete: WorkspaceColor
+    
+    let showsRevealInFinder: Bool
+    let preview: ArtefactPreview
+    
 
-    let action: () -> Void
+    let onOpen: () -> Void
     let onUpdate: () -> Void
     let onDelete: () -> Void
     let onRevealInFinder: () -> Void
@@ -26,55 +30,48 @@ struct ArtefactCard: View {
 
     var body: some View {
 
-        ZStack(alignment: .bottomTrailing) {
+        ZStack {
+            RoundedRectangle(cornerRadius: 15)
+                .fill(ArtefactColorPalette.color(
+                    for: artefact.type,
+                    workspaceBaseColor: pallete,
+                    scheme: colorScheme)
+                    )
+            
+            preview
+        }
 
-            ArtefactPreview(
-                   artefact: artefact,
-                   palette: pallete
-               )
-
-               Text(artefact.name)
-                   .font(.headline)
-                   .foregroundStyle(.white)
-                   .lineLimit(2)
-                   .padding()
-
-            Image(systemName: "arrow.down.right")
-                .font(.caption)
-                .foregroundStyle(.white)
-                .padding(8)
-                .background(.black)
-                .clipShape(Circle())
-                .padding(8)
-                .gesture(
-                    DragGesture()
-                        .onChanged { value in
-                            onResizeChanged(
-                                value.translation
-                            )
-                        }
-                        .onEnded { value in
-                            onResizeEnded(
-                                value.translation
-                            )
-                        }
-                )
+        .clipShape(RoundedRectangle(cornerRadius: 15))
+        .overlay {
+            if isHovering {
+                RoundedRectangle(cornerRadius: 15)
+                    .stroke(.white.opacity(0.5), lineWidth: 2)
+            }
+        }
+        .contentShape(Rectangle())
+        .gesture(
+            DragGesture()
+                .onChanged {
+                    onResizeChanged($0.translation)
+                }
+                .onEnded {
+                    onResizeEnded($0.translation)
+                }
+        )
+        .onHover {
+            isHovering = $0
         }
         .onTapGesture {
-            action()
+            onOpen()
         }
         .contextMenu {
-
             Button("Abrir") {
-                action()
+                onOpen()
             }
-
             Button("Editar") {
                 onUpdate()
             }
-
-            if artefact.type == .archive {
-
+            if showsRevealInFinder {
                 Button("Mostrar no Finder") {
                     onRevealInFinder()
                 }
@@ -82,12 +79,12 @@ struct ArtefactCard: View {
 
             Divider()
 
-            Button(
-                "Excluir",
-                role: .destructive
-            ) {
+            Button("Excluir", role: .destructive) {
                 onDelete()
             }
+
         }
+
     }
+
 }

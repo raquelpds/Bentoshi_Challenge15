@@ -43,6 +43,29 @@ final class WorkspacePresenter {
     }
     
     
+    func shouldShowRevealInFinder(
+        for artefact: Artefact
+    ) -> Bool {
+
+        artefact.type == .archive
+
+    }
+    
+    func backgroundColor(
+        for artefact: Artefact,
+        palette: WorkspaceColor,
+        scheme: ColorScheme
+    ) -> Color {
+
+        ArtefactColorPalette.color(
+            for: artefact.type,
+            workspaceBaseColor: palette,
+            scheme: scheme
+        )
+
+    }
+    
+    
     func deleteWorkspace(_ workspace: Workspace) async {
         do {
             try await interactor.deleteWorkspace(id: workspace.id)
