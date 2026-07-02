@@ -108,7 +108,8 @@ struct AddLinkView: View {
                                     to: workspace,
                                     payload: .link(
                                         url: newReceivedLink,
-                                        name: newLinkName
+                                        name: newLinkName,
+                                        keywords: []
                                     )
                                 )
                                 
