@@ -1,5 +1,5 @@
 //
-//  Workspace.swift
+//  Artefact.swift
 //  Bentoshi
 //
 //  Created by Lizandra Malta on 17/06/26.
@@ -7,60 +7,81 @@
 
 import SwiftData
 import Foundation
+import AppKit
 
 @Model
 final class Artefact {
 
     var id: UUID
 
-    var title: String
+    var name: String
     var type: ArtefactType
     var content: String
 
-    var width: Double
-    var height: Double
-    var positionX: Int
-    var positionY: Int
+    @Attribute(.externalStorage)
+    var formattedTextData: Data?
+
+    var workspaceId: UUID
+    var createdAt: Date
+    var updatedAt: Date
+    
+    //aqui é pra armazenar quais células da grid o artefato usa
+    var gridRow: Int
+    var gridColumn: Int
+    
+    //aqui é pra armazenar a altura e largura do artefato após o usuário redimensionar o artefato.
+    var width: Int
+    var height: Int
+    
+    var bookmark: Data?
+    var workspace: Workspace?
 
     @Relationship(deleteRule: .cascade)
     var searchIndexes: [SearchIndex]
 
-    init(title: String, type: ArtefactType, content: String, width: Double, height: Double, positionX: Int, positionY: Int) {
+    init(
+        name: String,
+        type: ArtefactType,
+        content: String,
+        workspaceId: UUID,
+        row: Int, 
+        column: Int,
+        width: Int, 
+        height: Int,
+        bookmark: Data? = nil,
+        formattedText: NSAttributedString? = nil
+    ) {
         self.id = UUID()
 
-        self.title = title
+        self.name = name
         self.type = type
         self.content = content
+
+        self.workspaceId = workspaceId
+        
+        self.gridRow = row
+        self.gridColumn = column
 
         self.width = width
         self.height = height
 
-        self.positionX = positionX
-        self.positionY = positionY
+        self.bookmark = bookmark
+
+        self.createdAt = .now
+        self.updatedAt = .now
 
         self.searchIndexes = []
 
-        rebuildSearchIndexes()
+        if let formattedText {
+            self.formattedTextData = formattedText.rtfData()
+        }
+        
+        rebuildAutomaticSearchIndexes()
     }
 }
 
+
 extension Artefact {
-
-    func rebuildSearchIndexes() {
-
-        searchIndexes.removeAll()
-
-        for keyword in searchableKeywords {
-
-            searchIndexes.append(
-                SearchIndex(
-                    keyword: keyword,
-                    workspace: nil,
-                    artefact: self
-                )
-            )
-        }
-    }
 
     var searchableKeywords: [String] {
 
@@ -71,7 +92,7 @@ extension Artefact {
         case .text:
             rawKeywords = extractKeywords(
                 from: [
-                    title,
+                    name,
                     content
                 ]
             )
@@ -79,7 +100,7 @@ extension Artefact {
         case .link:
             rawKeywords = extractKeywords(
                 from: [
-                    normalizedLinkTitle,
+                    normalizedLinkName,
                     extractURLKeywords(content)
                 ]
             )
@@ -87,7 +108,7 @@ extension Artefact {
         default:
             rawKeywords = extractKeywords(
                 from: [
-                    title
+                    name
                 ]
             )
         }
@@ -100,10 +121,90 @@ extension Artefact {
             )
         )
     }
+    
+    var archiveUrl: URL? {
+        var isStale = false
+
+        guard let bookmark = bookmark, let resolvedUrl = try? URL(
+            resolvingBookmarkData: bookmark,
+            options: [.withSecurityScope],
+            relativeTo: nil,
+            bookmarkDataIsStale: &isStale
+        ) else {
+            return nil
+        }
+
+        return resolvedUrl
+    }
+    
+    var linkUrl: URL? {
+        return URL(string: content)
+    }
 }
 
-private extension Artefact {
+extension Artefact {
+    func checkIsMissingArchivePath() -> Bool {
+        guard let url = archiveUrl else { return true }
+        return !FileManager.default.fileExists(
+            atPath: url.path
+        )
+    }
+    
+    func checkIsLinkValid() -> Bool {
+        if linkUrl != nil {
+            return true
+        }
+        
+        return false
+    }
+}
 
+extension Artefact {
+    
+    func rebuildAutomaticSearchIndexes() {
+        searchIndexes.removeAll { index in
+            index.source == .automatic
+        }
+
+        for keyword in searchableKeywords {
+            searchIndexes.append(
+                SearchIndex(
+                    keyword: keyword,
+                    workspaceId: workspaceId,
+                    source: .automatic,
+                    artefact: self
+                )
+            )
+        }
+    }
+    
+    func addManualSearchKeyword(_ keyword: String) {
+        let normalizedKeyword = normalize(keyword)
+
+        guard !normalizedKeyword.isEmpty else { return }
+
+        searchIndexes.append(
+            SearchIndex(
+                keyword: normalizedKeyword,
+                workspaceId: workspaceId,
+                source: .manual,
+                artefact: self
+            )
+        )
+    }
+
+    func getManualKeywords() -> [String] {
+        var keywords: [String] = []
+        
+        for searchIndex in searchIndexes {
+            if searchIndex.source == .manual {
+                keywords.append(searchIndex.keyword)
+            }
+        }
+        
+        return keywords
+    }
+    
     func extractKeywords(from values: [String]) -> [String] {
         values
             .flatMap {
@@ -142,10 +243,10 @@ private extension Artefact {
             )
     }
 
-    var normalizedLinkTitle: String {
+    var normalizedLinkName: String {
 
         let normalizedTitle =
-            normalize(title)
+            normalize(name)
 
         let normalizedContent =
             normalize(content)
@@ -154,6 +255,72 @@ private extension Artefact {
             return extractURLKeywords(content)
         }
 
-        return title
+        return name
+    }
+}
+
+extension NSAttributedString {
+
+    func rtfData() -> Data? {
+
+        try? data(
+            from: NSRange(
+                location: 0,
+                length: length
+            ),
+            documentAttributes: [
+                .documentType: NSAttributedString.DocumentType.rtf
+            ]
+        )
+    }
+
+    static func fromRTF(_ data: Data?) -> NSAttributedString {
+
+        guard
+            let data,
+            let attributed = try? NSAttributedString(
+                data: data,
+                options: [
+                    .documentType: NSAttributedString.DocumentType.rtf
+                ],
+                documentAttributes: nil
+            )
+        else {
+            return NSAttributedString(string: "")
+        }
+
+        return attributed
+    }
+}
+
+extension Artefact {
+
+    func setFormattedText(_ text: NSAttributedString) {
+
+        formattedTextData = text.rtfData()
+
+        content = text.string
+        updatedAt = .now
+    }
+
+    func getFormattedText() -> NSAttributedString {
+
+        NSAttributedString.fromRTF(formattedTextData)
+    }
+}
+
+extension Artefact {
+///você deve capturar o caminho do arquivo (URL), inicializar o NSImage com ele e, em seguida, exibi-lo em um componente de visualização
+    var previewImage: NSImage? {
+        guard let url = archiveUrl else {
+            return nil
+        }
+        let didAccess = url.startAccessingSecurityScopedResource()
+        defer {
+            if didAccess {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+        return NSImage(contentsOf: url)
     }
 }

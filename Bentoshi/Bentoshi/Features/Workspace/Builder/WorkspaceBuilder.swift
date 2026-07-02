@@ -6,19 +6,21 @@
 //
 
 import SwiftData
+import SwiftUI
 
 enum WorkspaceBuilder {
 
     @MainActor
-    static func build(context: ModelContext) -> WorkspaceView {
+    static func build(context: ModelContext, sortOption: SortOption, workspace: Workspace) -> WorkspaceView {
 
         let workspaceService: WorkspaceServiceProtocol = WorkspaceService(context: context)
-        
         let artefactService: ArtefactServiceProtocol = ArtefactService(context: context)
+        let searchIndexService: SearchIndexServiceProtocol = SearchIndexService(context: context)
 
         let interactor = WorkspaceInteractor(
             workspaceService: workspaceService,
-            artefactService: artefactService
+            artefactService: artefactService,
+            searchIndexService: searchIndexService
         )
 
         let presenter = WorkspacePresenter(
@@ -26,7 +28,9 @@ enum WorkspaceBuilder {
         )
 
         return WorkspaceView(
-            presenter: presenter
+            presenter: presenter,
+            sortOption: sortOption,
+            workspace: workspace
         )
     }
 }

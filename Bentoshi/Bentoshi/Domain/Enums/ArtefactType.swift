@@ -6,7 +6,38 @@
 //
 
 enum ArtefactType: String, Codable, CaseIterable {
-    case link
-    case archive
-    case text
+    
+    case link = "Link"
+    case archive = "Arquivo"
+    case text = "Texto"
+    
+}
+
+extension ArtefactType {
+
+    var initialWidth: Int {
+        switch self {
+        case .link:
+            return 3
+
+        case .text:
+            return 2
+
+        case .archive:
+            return 3
+        }
+    }
+
+    var initialHeight: Int {
+        switch self {
+        case .link:
+            return 1
+
+        case .text:
+            return 3
+
+        case .archive:
+            return 3
+        }
+    }
 }

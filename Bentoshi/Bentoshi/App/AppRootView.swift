@@ -13,7 +13,10 @@ struct AppRootView: View {
     @Environment(\.modelContext) private var context
     
     var body: some View {
-        HomeBuilder.build(context: context)
+        NavigationStack {
+            HomeBuilder.build(context: context)
+                .frame(minWidth: 1100, minHeight: 800)
+        }
     }
 }
 
