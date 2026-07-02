@@ -163,7 +163,7 @@ struct LinkFormSheet: View {
                     }
                 }
                 
-                TextField("", text: $allKeywords)
+                TextField("Palavra-chave 1, Palavra-chave 2, Palavra-chave 3", text: $allKeywords)
                     .textFieldStyle(.roundedBorder)
                     .onSubmit {
                         commitPendingKeywords()
