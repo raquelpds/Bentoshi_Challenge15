@@ -34,15 +34,15 @@ struct WorkspaceCard: View {
                 }
                 
                 HStack(spacing: 4) {
-                    Text("\(workspace.artefacts.count) \(workspace.artefacts.count > 1 ? "Itens" : "Item")")
-                        .font(.title3)
-                        .foregroundStyle(.secondary)
-                        .fontDesign(.rounded)
-                    
-                    Text("|")
-                        .font(.title3)
-                        .foregroundStyle(.secondary)
-                        .fontDesign(.rounded)
+//                    Text("\(workspace.artefactsCount) \(workspace.artefactsCount > 1 ? "Itens" : "Item")")
+//                        .font(.title3)
+//                        .foregroundStyle(.secondary)
+//                        .fontDesign(.rounded)
+//                    
+//                    Text("|")
+//                        .font(.title3)
+//                        .foregroundStyle(.secondary)
+//                        .fontDesign(.rounded)
                     
                     Text(dateText)
                         .font(.title3)

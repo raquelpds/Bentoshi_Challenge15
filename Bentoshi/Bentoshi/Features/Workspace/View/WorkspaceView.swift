@@ -73,169 +73,160 @@ struct WorkspaceView: View {
     @State private var alert: WorkspaceAlert?
     @State private var showColorPickerPopover = false
     
-    let workspace: Workspace
     let sortOption: SortOption
-    
-    private var current: Workspace {
-        workspaces.first { $0.id == selectedID } ?? workspace
+    var current: Workspace? {
+        workspaces.first {$0.id == selectedID}
     }
     
-    init(presenter: WorkspacePresenter, sortOption: SortOption, workspace: Workspace){
+    init(presenter: WorkspacePresenter, sortOption: SortOption, workspace: Workspace) {
+        _presenter = State(initialValue: presenter)
+        _selectedID = State(initialValue: workspace.id)
         
-        self.presenter = presenter
         self.sortOption = sortOption
-        self.workspace = workspace
         
         switch sortOption {
         case .alphabet:
-            _workspaces = Query(
-                sort: \Workspace.normalizedName,
-                order: .forward
-            )
+            _workspaces = Query(sort: \Workspace.normalizedName, order: .forward)
             
         case .lastCreated:
-            _workspaces = Query(
-                sort: \Workspace.createdAt,
-                order: .reverse
-            )
+            _workspaces = Query(sort: \Workspace.createdAt, order: .reverse)
             
         case .lastModified:
-            _workspaces = Query(
-                sort: \Workspace.updatedAt,
-                order: .reverse
-            )
+            _workspaces = Query(sort: \Workspace.updatedAt, order: .reverse)
         }
     }
     
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            // Se tem detailRoute, mostra 3 colunas. Senão, 2 colunas
-            if detailRoute != nil {
-                NavigationSplitView {
-                    // COLUNA 1: Sidebar com workspaces
-                    WorkspaceSidebar(
-                        workspaces: workspaces,
-                        selectedID: $selectedID
-                    )
-                } content: {
-                    // COLUNA 2: Conteúdo do workspace
-                    contentView
-                    
-                    
-                } detail: {
-                    // COLUNA 3: Editor de texto lateral
-                    if let detailRoute = detailRoute {
-                        textEditorPanel(for: detailRoute)
-                            .navigationSplitViewColumnWidth(
-                                min: 400,
-                                ideal: 500,
-                                max: 600
-                            )
+        if let current {
+            ZStack(alignment: .bottomTrailing) {
+                // Se tem detailRoute, mostra 3 colunas. Senão, 2 colunas
+                if detailRoute != nil {
+                    NavigationSplitView {
+                        // COLUNA 1: Sidebar com workspaces
+                        WorkspaceSidebar(
+                            workspaces: workspaces,
+                            selectedID: $selectedID
+                        )
+                    } content: {
+                        // COLUNA 2: Conteúdo do workspace
+                        contentView
+                        
+                        
+                    } detail: {
+                        // COLUNA 3: Editor de texto lateral
+                        if let detailRoute = detailRoute {
+                            textEditorPanel(for: detailRoute)
+                                .navigationSplitViewColumnWidth(
+                                    min: 400,
+                                    ideal: 500,
+                                    max: 600
+                                )
+                        }
+                    }
+                } else {
+                    NavigationSplitView {
+                        // COLUNA 1: Sidebar com workspaces
+                        WorkspaceSidebar(
+                            workspaces: workspaces,
+                            selectedID: $selectedID
+                        )
+                    } detail: {
+                        // Só 2 colunas quando sem editor
+                        contentView
+                        
                     }
                 }
-            } else {
-                NavigationSplitView {
-                    // COLUNA 1: Sidebar com workspaces
-                    WorkspaceSidebar(
-                        workspaces: workspaces,
-                        selectedID: $selectedID
-                    )
-                } detail: {
-                    // Só 2 colunas quando sem editor
-                    contentView
-                    
+                
+                FloatingAddButton { action in
+                    switch action {
+                    case .archive:
+                        sheetRoute = .newArchive
+                    case .text:
+                        detailRoute = .newText
+                    case .link:
+                        sheetRoute = .newLink
+                    }
+                }
+                .opacity(detailRoute == nil ? 1 : 0)
+                .allowsHitTesting(detailRoute == nil)
+            }
+            .searchable(text: $presenter.searchText)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showColorPickerPopover.toggle()
+                    } label: {
+                        Image(systemName: "paintpalette")
+                    }
+                    .popover(isPresented: $showColorPickerPopover, arrowEdge: .top) {
+                        ColorPickerPopover(workspace: current, presenter: presenter)
+                    }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        Button(role: .destructive) {
+                            deleteCurrentWorkspace()
+                        } label: {
+                            Label("Excluir", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                    }
+                    .menuIndicator(.hidden)
                 }
             }
+            .onChange(of: presenter.searchText) { _, _ in
+                presenter.onSearchTextChangedOn(current)
+            }
+            .onDisappear {
+                // Reseta o editor ao sair do workspace
+                detailRoute = nil
+            }
+            .workspaceSheets(
+                route: $sheetRoute,
+                workspace: current,
+                presenter: presenter
+            )
+            .workspaceAlerts(
+                alert: $alert,
+                route: $sheetRoute,
+                workspace: current,
+                presenter: presenter,
+                onDeleteWorkspace: deleteCurrentWorkspace
+            )
+            .navigationTitle("")
             
-            FloatingAddButton { action in
-                switch action {
-                case .archive:
-                    sheetRoute = .newArchive
-                case .text:
-                    detailRoute = .newText
-                case .link:
-                    sheetRoute = .newLink
-                }
-            }
-            .opacity(detailRoute == nil ? 1 : 0)
-            .allowsHitTesting(detailRoute == nil)
         }
-        .searchable(text: $presenter.searchText)
-        .onChange(of: presenter.searchText) { _, _ in
-            presenter.onSearchTextChangedOn(current)
-        }
-        .onDisappear {
-            // Reseta o editor ao sair do workspace
-            detailRoute = nil
-        }
-        .workspaceSheets(
-            route: $sheetRoute,
-            workspace: current,
-            presenter: presenter
-        )
-        .workspaceAlerts(
-            alert: $alert,
-            route: $sheetRoute,
-            workspace: current,
-            presenter: presenter,
-            onDeleteWorkspace: deleteCurrentWorkspace
-        )
-        .onAppear {
-            selectedID = selectedID ?? workspace.id
-        }
-        .navigationTitle("")
+        
     }
     
     private var contentView: some View {
         VStack {
-            WorkspaceTitle(
-                workspace: current,
-                presenter: presenter
-            )
-            ZStack {
-                WorkspaceDetailContent(
-                    workspace: current,
-                    presenter: presenter,
-                    sheetRoute: $sheetRoute,
-                    detailRoute: $detailRoute,
-                    alert: $alert
-                )
-                .opacity(isSearchActive ? 0 : 1)
-                .allowsHitTesting(!isSearchActive)
-                
-                WorkspaceSearchContent(
+            if let current {
+                WorkspaceTitle(
                     workspace: current,
                     presenter: presenter
                 )
-                .opacity(isSearchActive ? 1 : 0)
-                .allowsHitTesting(isSearchActive)
+                ZStack {
+                    WorkspaceDetailContent(
+                        workspace: current,
+                        presenter: presenter,
+                        sheetRoute: $sheetRoute,
+                        detailRoute: $detailRoute,
+                        alert: $alert
+                    )
+                    .opacity(isSearchActive ? 0 : 1)
+                    .allowsHitTesting(!isSearchActive)
+                    
+                    WorkspaceSearchContent(
+                        workspace: current,
+                        presenter: presenter
+                    )
+                    .opacity(isSearchActive ? 1 : 0)
+                    .allowsHitTesting(isSearchActive)
+                }
             }
         }
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    showColorPickerPopover.toggle()
-                } label: {
-                    Image(systemName: "paintpalette")
-                }
-                .popover(isPresented: $showColorPickerPopover, arrowEdge: .top) {
-                    ColorPickerPopover(workspace: current, presenter: presenter)
-                }
-            }
-            ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    Button(role: .destructive) {
-                        alert = .deleteWorkspace
-                    } label: {
-                        Label("Excluir", systemImage: "trash")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis")
-                }
-                .menuIndicator(.hidden)
-            }
-        }
-        
     }
     
     @ViewBuilder
@@ -245,12 +236,14 @@ struct WorkspaceView: View {
             TextEditorSheet(
                 mode: .create,
                 onSave: { title, formattedText in
-                    Task {
-                        await presenter.addArtefact(
-                            to: current,
-                            payload: .text(title: title, content: formattedText)
-                        )
-                        detailRoute = nil
+                    if let current {
+                        Task {
+                            await presenter.addArtefact(
+                                to: current,
+                                payload: .text(title: title, content: formattedText)
+                            )
+                            detailRoute = nil
+                        }
                     }
                 },
                 onCancel: {
@@ -285,15 +278,20 @@ struct WorkspaceView: View {
 extension WorkspaceView {
     
     private func deleteCurrentWorkspace() {
-        let workspaceToDelete = current
         
-        Task {
-            await presenter.deleteWorkspace(workspaceToDelete)
+        if let current {
+            let workspaceToDelete = current
             
-            if let nextWorkspace = workspaces.first {
+            let nextWorkspace = workspaces.first { $0.id != workspaceToDelete.id }
+            
+            if let nextWorkspace {
                 selectedID = nextWorkspace.id
             } else {
                 dismiss()
+            }
+            
+            Task {
+                await presenter.deleteWorkspace(workspaceToDelete)
             }
         }
     }

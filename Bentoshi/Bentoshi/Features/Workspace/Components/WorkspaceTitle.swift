@@ -26,12 +26,7 @@ struct WorkspaceTitle: View {
     }
     
     var body: some View {
-        HStack(spacing: 16) {
-            Image("BIcon")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 44, height: 32)
-            
+        HStack {
             if isEditing {
                 TextField("", text: $name)
                     .font(.largeTitle)
