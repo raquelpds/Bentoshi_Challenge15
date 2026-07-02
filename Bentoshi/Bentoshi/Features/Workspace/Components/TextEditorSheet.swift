@@ -66,18 +66,16 @@ struct TextEditorSheet: View {
     var body: some View {
         VStack(alignment: .center, spacing: 12) {
             HStack {
-                Text(mode.title)
-                    .font(.title2)
-                    .fontWeight(.semibold)
+                // Campo para digitar/editar o título do texto
+                TextField("Título", text: $title)
+                    .textFieldStyle(.plain)
+                    .font(.largeTitle)
+                    .bold()
+                    .padding(10)
+                    
                 
                 Spacer()
             }
-
-            // Campo para digitar/editar o título do texto
-            TextField("Título do texto", text: $title)
-                .textFieldStyle(.roundedBorder)
-                .font(.system(size: 14))
-                .padding(.horizontal, 2)
 
             toolbar
 
@@ -97,7 +95,6 @@ struct TextEditorSheet: View {
             context: editorContext
         )
         .padding(12)
-        .background(Color(nsColor: .textBackgroundColor))
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
@@ -120,12 +117,12 @@ struct TextEditorSheet: View {
                 Button("Título Principal") { applyTitle() }
                 Button("Título") { applyHeading() }
                 Button("Subtítulo") { applySubheading() }
-                Button("Corpo de Texto") { applyBody() }
+                Button("Corpo") { applyBody() }
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "textformat.size")
                     Text("Formato")
-                        .font(.system(size: 11))
+                        .font(.system(size: 12))
                 }
             }
             .menuStyle(.borderlessButton)
@@ -185,7 +182,7 @@ struct TextEditorSheet: View {
     ) -> some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.system(size: 11, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
                 .frame(width: 24, height: 22)
                 .contentShape(Rectangle())
         }
@@ -198,7 +195,7 @@ struct TextEditorSheet: View {
         guard range.length > 0 else { return }
         
         textView.textStorage?.enumerateAttribute(.font, in: range) { value, subrange, _ in
-            let currentFont = value as? NSFont ?? .systemFont(ofSize: 16)
+            let currentFont = value as? NSFont ?? .systemFont(ofSize: 13)
             
             let isBold = NSFontManager.shared.traits(of: currentFont).contains(.boldFontMask)
             
@@ -219,7 +216,7 @@ struct TextEditorSheet: View {
         guard range.length > 0 else { return }
 
         textView.textStorage?.enumerateAttribute(.font, in: range) { value, subrange, _ in
-            let currentFont = value as? NSFont ?? .systemFont(ofSize: 16)
+            let currentFont = value as? NSFont ?? .systemFont(ofSize: 13)
             
             let isItalic = NSFontManager.shared.traits(of: currentFont).contains(.italicFontMask)
             
@@ -274,7 +271,7 @@ struct TextEditorSheet: View {
         guard range.length > 0 else { return }
 
         let titleFont = NSFont.systemFont(
-            ofSize: 24,
+            ofSize: 26,
             weight: .bold
         )
 
@@ -294,8 +291,8 @@ struct TextEditorSheet: View {
         guard range.length > 0 else { return }
 
         let headingFont = NSFont.systemFont(
-            ofSize: 16,
-            weight: .heavy
+            ofSize: 21,
+            weight: .bold
         )
 
         textView.textStorage?.addAttribute(
@@ -314,7 +311,7 @@ struct TextEditorSheet: View {
         guard range.length > 0 else { return }
 
         let subheadingFont = NSFont.systemFont(
-            ofSize: 14,
+            ofSize: 15,
             weight: .semibold
         )
 
@@ -334,8 +331,8 @@ struct TextEditorSheet: View {
         guard range.length > 0 else { return }
 
         let subheadingFont = NSFont.systemFont(
-            ofSize: 16,
-            weight: .semibold
+            ofSize: 13,
+            weight: .regular
         )
 
         textView.textStorage?.addAttribute(

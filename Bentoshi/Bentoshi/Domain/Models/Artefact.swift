@@ -193,6 +193,18 @@ extension Artefact {
         )
     }
 
+    func getManualKeywords() -> [String] {
+        var keywords: [String] = []
+        
+        for searchIndex in searchIndexes {
+            if searchIndex.source == .manual {
+                keywords.append(searchIndex.keyword)
+            }
+        }
+        
+        return keywords
+    }
+    
     func extractKeywords(from values: [String]) -> [String] {
         values
             .flatMap {

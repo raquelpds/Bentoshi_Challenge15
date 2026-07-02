@@ -18,52 +18,56 @@ struct WorkspaceSheetsModifier: ViewModifier {
             .sheet(item: $route) { route in
                 switch route {
                 case .newArchive:
-                    FilePicker(mode: .create) { fileUrl, fileName in
+                    FilePicker(mode: .create) { fileUrl, fileName, keywords in
                         Task {
                             await presenter.addArtefact(
                                 to: workspace,
                                 payload: .archive(
                                     url: fileUrl,
-                                    name: fileName
+                                    name: fileName,
+                                    keywords: keywords
                                 )
                             )
                         }
                     }
                     
                 case .newLink:
-                    LinkFormSheet(mode: .create) { url, name in
+                    LinkFormSheet(mode: .create) { url, name, keywords in
                         Task {
                             await presenter.addArtefact(
                                 to: workspace,
                                 payload: .link(
                                     url: url,
-                                    name: name
+                                    name: name,
+                                    keywords: keywords
                                 )
                             )
                         }
                     }
                     
                 case .updateArchive(let artefact):
-                    FilePicker(mode: .edit(artefact)) { fileUrl, fileName in
+                    FilePicker(mode: .edit(artefact)) { fileUrl, fileName, keywords in
                         Task {
                             await presenter.updateArtefact(
                                 artefact,
                                 payload: .archive(
                                     newURL: fileUrl,
-                                    newName: fileName
+                                    newName: fileName,
+                                    keywords: keywords
                                 )
                             )
                         }
                     }
                     
                 case .updateLink(let artefact):
-                    LinkFormSheet(mode: .edit(artefact)) { url, name in
+                    LinkFormSheet(mode: .edit(artefact)) { url, name, keywords in
                         Task {
                             await presenter.updateArtefact(
                                 artefact,
                                 payload: .link(
                                     newURL: url,
-                                    newName: name
+                                    newName: name,
+                                    keywords: keywords
                                 )
                             )
                         }

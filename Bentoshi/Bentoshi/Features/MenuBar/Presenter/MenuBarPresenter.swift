@@ -19,18 +19,18 @@ final class MenuBarPresenter {
     func addArtefact(to workspace: Workspace, payload: ArtefactCreatePayload) async {
         switch payload {
 
-        case .archive(let url, let name):
+        case .archive(let url, let name, let keywords):
             await addArchiveArtefact(
                 to: workspace,
                 archiveUrl: url,
-                withName: name
+                withName: name,
             )
 
-        case .link(let url, let name):
+        case .link(let url, let name, let keywords):
             await addLinkArtefact(
                 to: workspace,
                 url: url,
-                withName: name
+                withName: name,
             )
 
         case .text(let name, let content):

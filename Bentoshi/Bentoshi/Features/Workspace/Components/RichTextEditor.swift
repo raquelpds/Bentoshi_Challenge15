@@ -142,10 +142,9 @@ struct RichTextEditor: NSViewRepresentable {
         textView.isEditable = true
         textView.isSelectable = true
         textView.textStorage?.setAttributedString(text)
-        textView.textColor = .white
         textView.drawsBackground = false
         textView.textContainerInset = NSSize(width: 12, height: 12)
-        textView.font = .systemFont(ofSize: 16)
+        textView.font = .systemFont(ofSize: 13)
         textView.insertionPointColor = .controlAccentColor
         
         // Guarda a referência do textView de forma segura no contexto compartilhado

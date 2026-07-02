@@ -92,7 +92,8 @@ struct MenuBarView: View {
                                         to: workspace,
                                         payload: .link(
                                             url: newReceivedLink,
-                                            name: newLinkName
+                                            name: newLinkName,
+                                            keywords: []
                                         )
                                     )
 
@@ -106,7 +107,8 @@ struct MenuBarView: View {
                                         to: workspace,
                                         payload: .archive(
                                             url: fileUrl,
-                                            name: newFileName
+                                            name: newFileName,
+                                            keywords: []
                                         )
                                     )
                                     
