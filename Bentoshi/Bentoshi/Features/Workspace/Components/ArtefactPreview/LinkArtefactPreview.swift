@@ -19,14 +19,14 @@ struct LinkArtefactPreview: View {
             spacing: 12
         ) {
 
-            Text(name)
-                .font(.headline)
-                .lineLimit(2)
-
-            Text(url)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
+            HStack{
+                Image(systemName: "link")
+                    .bold()
+                Text(name)
+                    .font(.title2)
+                    .bold()
+                    .lineLimit(2)
+            }
         }
         .padding()
     }
