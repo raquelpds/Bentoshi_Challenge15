@@ -42,6 +42,7 @@ struct ArtefactCard: View {
         .clipShape(
             RoundedRectangle(cornerRadius: 15)
         )
+        .clipped()
         .overlay {
             if isHovering {
                 RoundedRectangle(cornerRadius: 15)
