@@ -23,7 +23,7 @@ enum ArtefactUpdatePayload {
 
 @Observable
 final class WorkspacePresenter {
-    private let interactor: WorkspaceInteractor
+    let interactor: WorkspaceInteractor
     
     var searchedItems: [SearchIndex] = []
     var searchText: String = ""
@@ -37,6 +37,9 @@ final class WorkspacePresenter {
     var allWorkspaces: [Workspace] = []
     
     var richText: NSAttributedString = NSAttributedString(string: "")
+    
+    //raquel
+    private let archivePreviewImageProvider = ArchivePreviewImageProvider()
     
     init(interactor: WorkspaceInteractor) {
         self.interactor = interactor
@@ -498,5 +501,111 @@ extension WorkspacePresenter {
     ) -> String {
         
         attributed.string
+    }
+}
+
+
+//raquel
+extension WorkspacePresenter {
+
+    func routeForUpdating(
+        _ artefact: Artefact
+    ) -> WorkspaceRoute {
+        switch artefact.type {
+        case .archive:
+            return .updateArchive(artefact)
+
+        case .link:
+            return .updateLink(artefact)
+
+        case .text:
+            return .updateText(artefact)
+        }
+    }
+
+    func shouldEditInsteadOfOpen(
+        _ artefact: Artefact
+    ) -> Bool {
+        artefact.type == .text
+    }
+
+    func alertForOpeningIfNeeded(
+        _ artefact: Artefact
+    ) -> WorkspaceAlert? {
+        if artefact.type == .archive &&
+            artefact.checkIsMissingArchivePath() {
+            return .missingArchive(artefact)
+        }
+
+        if artefact.type == .link &&
+            !artefact.checkIsLinkValid() {
+            return .invalidLink(artefact)
+        }
+
+        return nil
+    }
+
+    func alertForRevealInFinderIfNeeded(
+        _ artefact: Artefact
+    ) -> WorkspaceAlert? {
+        guard artefact.type == .archive else {
+            return nil
+        }
+
+        if artefact.checkIsMissingArchivePath() {
+            return .missingArchive(artefact)
+        }
+
+        return nil
+    }
+}
+
+//raquel
+extension WorkspacePresenter {
+
+    func moveArtefact(
+        _ artefact: Artefact,
+        in workspace: Workspace,
+        to row: Int,
+        column: Int
+    ) async {
+        do {
+            try await interactor.moveArtefact(
+                artefact,
+                in: workspace,
+                to: row,
+                column: column
+            )
+        } catch {
+            print("Erro ao mover artefato: \(error)")
+        }
+    }
+
+    func resizeArtefact(
+        _ artefact: Artefact,
+        in workspace: Workspace,
+        width: Int,
+        height: Int
+    ) async {
+        do {
+            try await interactor.resizeArtefact(
+                artefact,
+                in: workspace,
+                width: width,
+                height: height
+            )
+        } catch {
+            print("Erro ao redimensionar artefato: \(error)")
+        }
+    }
+}
+
+//raquel
+extension WorkspacePresenter {
+
+    func archivePreviewImage(
+        for artefact: Artefact
+    ) -> NSImage? {
+        archivePreviewImageProvider.previewImage(for: artefact)
     }
 }

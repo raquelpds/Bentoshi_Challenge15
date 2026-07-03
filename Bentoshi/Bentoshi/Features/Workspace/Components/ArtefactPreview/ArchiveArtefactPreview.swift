@@ -6,40 +6,43 @@
 //
 
 import SwiftUI
+import AppKit
 
 struct ArchiveArtefactPreview: View {
 
-    let title: String
-    let fileName: String
+    let previewImage: NSImage?
 
     var body: some View {
-
-        VStack(
-            alignment: .leading,
-            spacing: 12
-        ) {
-
-            Image(systemName: "doc")
-
-                .font(.largeTitle)
-
-            Spacer()
-
-            Text(title)
-
-                .font(.headline)
-
-                .lineLimit(2)
-
-            Text(fileName)
-
-                .font(.caption)
-
-                .foregroundStyle(.secondary)
-
-                .lineLimit(2)
-
+        GeometryReader { geometry in
+            archivePreview(
+                width: geometry.size.width,
+                height: geometry.size.height
+            )
         }
-        .padding()
+    }
+
+    @ViewBuilder
+    private func archivePreview(
+        width: CGFloat,
+        height: CGFloat
+    ) -> some View {
+        if let previewImage {
+            Image(nsImage: previewImage)
+                .resizable()
+                .scaledToFill()
+                .frame(
+                    width: width,
+                    height: height
+                )
+                .clipped()
+                .allowsHitTesting(false)
+        } else {
+            fallbackPreview
+        }
+    }
+
+    private var fallbackPreview: some View {
+        RoundedRectangle(cornerRadius: 15)
+            .fill(Color.white)
     }
 }

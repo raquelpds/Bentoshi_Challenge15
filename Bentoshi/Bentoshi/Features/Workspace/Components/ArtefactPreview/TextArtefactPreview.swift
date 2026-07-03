@@ -7,33 +7,40 @@
 
 import SwiftUI
 
-
 struct TextArtefactPreview: View {
 
-    let title: String
     let text: String
 
     var body: some View {
-
-        VStack(
-            alignment: .leading,
-            spacing: 10
-        ) {
-
-            Image(systemName: "text.alignleft")
-                .font(.title2)
-
-            Spacer()
-
-            Text(title)
-                .font(.headline)
-                .lineLimit(2)
-
+        GeometryReader { geometry in
             Text(text)
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .lineLimit(4)
+                .font(.system(size: 14, weight: .regular))
+                .foregroundStyle(.primary)
+                .multilineTextAlignment(.leading)
+                .lineLimit(
+                    maxTextLines(
+                        for: geometry.size.height
+                    )
+                )
+                .truncationMode(.tail)
+                .padding(16)
+                .frame(
+                    width: geometry.size.width,
+                    height: geometry.size.height,
+                    alignment: .topLeading
+                )
         }
-        .padding()
+    }
+
+    private func maxTextLines(
+        for height: CGFloat
+    ) -> Int {
+        let verticalPadding: CGFloat = 32
+        let lineHeight: CGFloat = 18
+
+        return max(
+            1,
+            Int((height - verticalPadding) / lineHeight)
+        )
     }
 }

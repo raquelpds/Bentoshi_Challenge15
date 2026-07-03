@@ -81,7 +81,7 @@ struct WorkspaceView: View {
                 )
             } detail: {
                 ZStack {
-                    WorkspaceDetailContent(
+                    WorkspaceContent(
                         workspace: current,
                         presenter: presenter,
                         route: $route,

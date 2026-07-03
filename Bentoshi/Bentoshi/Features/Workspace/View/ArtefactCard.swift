@@ -9,14 +9,9 @@ import SwiftUI
 
 struct ArtefactCard: View {
 
-    @Environment(\.colorScheme) private var colorScheme
-    
-    let artefact: Artefact
-    let pallete: WorkspaceColor
-    
+    let backgroundColor: Color
     let showsRevealInFinder: Bool
     let preview: ArtefactPreview
-    
 
     let onOpen: () -> Void
     let onUpdate: () -> Void
@@ -25,41 +20,40 @@ struct ArtefactCard: View {
 
     let onResizeChanged: (CGSize) -> Void
     let onResizeEnded: (CGSize) -> Void
-    
+
     @State private var isHovering = false
 
     var body: some View {
-
-        ZStack {
+        ZStack(alignment: .bottomTrailing) {
             RoundedRectangle(cornerRadius: 15)
-                .fill(ArtefactColorPalette.color(
-                    for: artefact.type,
-                    workspaceBaseColor: pallete,
-                    scheme: colorScheme)
-                    )
-            
-            preview
-        }
+                .fill(backgroundColor)
 
-        .clipShape(RoundedRectangle(cornerRadius: 15))
+            preview
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity
+                )
+                .clipShape(
+                    RoundedRectangle(cornerRadius: 15)
+                )
+
+            resizeHandle
+        }
+        .clipShape(
+            RoundedRectangle(cornerRadius: 15)
+        )
         .overlay {
             if isHovering {
                 RoundedRectangle(cornerRadius: 15)
-                    .stroke(.white.opacity(0.5), lineWidth: 2)
+                    .stroke(
+                        .white.opacity(0.5),
+                        lineWidth: 2
+                    )
             }
         }
         .contentShape(Rectangle())
-        .gesture(
-            DragGesture()
-                .onChanged {
-                    onResizeChanged($0.translation)
-                }
-                .onEnded {
-                    onResizeEnded($0.translation)
-                }
-        )
-        .onHover {
-            isHovering = $0
+        .onHover { hovering in
+            isHovering = hovering
         }
         .onTapGesture {
             onOpen()
@@ -68,9 +62,11 @@ struct ArtefactCard: View {
             Button("Abrir") {
                 onOpen()
             }
+
             Button("Editar") {
                 onUpdate()
             }
+
             if showsRevealInFinder {
                 Button("Mostrar no Finder") {
                     onRevealInFinder()
@@ -79,12 +75,31 @@ struct ArtefactCard: View {
 
             Divider()
 
-            Button("Excluir", role: .destructive) {
+            Button(
+                "Excluir",
+                role: .destructive
+            ) {
                 onDelete()
             }
-
         }
-
     }
 
+    private var resizeHandle: some View {
+        Image(systemName: "arrow.down.right")
+            .font(.caption)
+            .foregroundStyle(.white)
+            .padding(8)
+            .background(.black)
+            .clipShape(Circle())
+            .padding(8)
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        onResizeChanged(value.translation)
+                    }
+                    .onEnded { value in
+                        onResizeEnded(value.translation)
+                    }
+            )
+    }
 }

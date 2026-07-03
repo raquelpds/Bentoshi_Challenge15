@@ -19,11 +19,6 @@ struct LinkArtefactPreview: View {
             spacing: 12
         ) {
 
-            Image(systemName: "link")
-                .font(.title2)
-
-            Spacer()
-
             Text(name)
                 .font(.headline)
                 .lineLimit(2)
