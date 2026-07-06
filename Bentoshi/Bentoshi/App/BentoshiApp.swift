@@ -11,6 +11,7 @@ import SwiftData
 @main
 struct BentoshiApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    let larguraTela = NSScreen.main?.visibleFrame.width ?? 1440
     
     let container: ModelContainer
     
@@ -33,6 +34,8 @@ struct BentoshiApp: App {
         WindowGroup {
             AppRootView()
         }
+        //tamanho inicial ao abrir
+        .defaultSize(width: larguraTela * 0.9, height: 900)
         .modelContainer(container)
     }
 }

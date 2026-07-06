@@ -15,7 +15,8 @@ struct ArtefactPreview: View {
     let name: String
     let content: String
     let archivePreviewImage: NSImage?
-
+    let backgroundColor: Color
+    
     var body: some View {
 
         switch type {
@@ -27,7 +28,7 @@ struct ArtefactPreview: View {
             LinkArtefactPreview(name: name, url: content)
 
         case .archive:
-            ArchiveArtefactPreview(previewImage: archivePreviewImage)
+            ArchiveArtefactPreview(previewImage: archivePreviewImage, fileName: name, backgroundColor: backgroundColor)
         }
 
     }

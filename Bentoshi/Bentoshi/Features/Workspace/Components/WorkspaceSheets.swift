@@ -3,12 +3,13 @@
 //  Bentoshi
 //
 //  Created by Lizandra Malta on 20/06/26.
-//
+
 
 import SwiftUI
 
 struct WorkspaceSheetsModifier: ViewModifier {
-    @Binding var route: WorkspaceRoute?
+    @Binding var route: WorkspaceSheetRoute?
+    
     let workspace: Workspace
     let presenter: WorkspacePresenter
     
@@ -16,80 +17,57 @@ struct WorkspaceSheetsModifier: ViewModifier {
         content
             .sheet(item: $route) { route in
                 switch route {
-                case .editWorkspace:
-                    WorkspaceFormView(mode: .edit(workspace)) { workspace, name, color in
-                        Task {
-                            await presenter.updateWorkspace(
-                                workspace,
-                                newName: name,
-                                newCoverColor: color
-                            )
-                        }
-                    }
-                    
                 case .newArchive:
-                    FilePicker(mode: .create) { fileUrl, fileName in
+                    FilePicker(mode: .create) { fileUrl, fileName, keywords in
                         Task {
                             await presenter.addArtefact(
                                 to: workspace,
-                                payload: .archive(url: fileUrl, name: fileName)
-                            )
-                        }
-                    }
-                
-                case .newLink:
-                    LinkFormSheet(mode: .create) { url, name in
-                        Task {
-                            await presenter.addArtefact(
-                                to: workspace,
-                                payload: .link(url: url, name: name)
+                                payload: .archive(
+                                    url: fileUrl,
+                                    name: fileName,
+                                    keywords: keywords
+                                )
                             )
                         }
                     }
                     
-                case .newText:
-                    TextEditorSheet(mode: .create) { title, content in
+                case .newLink:
+                    LinkFormSheet(mode: .create) { url, name, keywords in
                         Task {
                             await presenter.addArtefact(
                                 to: workspace,
-                                payload: .text(title: title, content: content))
+                                payload: .link(
+                                    url: url,
+                                    name: name,
+                                    keywords: keywords
+                                )
+                            )
                         }
                     }
                     
                 case .updateArchive(let artefact):
-                    FilePicker(mode: .edit(artefact)) { fileUrl, fileName in
+                    FilePicker(mode: .edit(artefact)) { fileUrl, fileName, keywords in
                         Task {
                             await presenter.updateArtefact(
                                 artefact,
                                 payload: .archive(
                                     newURL: fileUrl,
-                                    newName: fileName
+                                    newName: fileName,
+                                    keywords: keywords
                                 )
                             )
                         }
                     }
                     
                 case .updateLink(let artefact):
-                    LinkFormSheet(mode: .edit(artefact)) { url, name in
+                    LinkFormSheet(mode: .edit(artefact)) { url, name, keywords in
                         Task {
                             await presenter.updateArtefact(
                                 artefact,
                                 payload: .link(
                                     newURL: url,
-                                    newName: name
-                                )
-                            )
-                        }
-                    }
-                    
-                case .updateText(let artefact):
-                    TextEditorSheet(mode: .edit(artefact)) { title, content in
-                        Task {
-                            await presenter.updateArtefact(
-                                artefact,
-                                payload: .text(
-                                    newTitle: title,
-                                    newContent: content
+                                    newName: name,
+                                    keywords: keywords
                                 )
                             )
                         }
@@ -101,15 +79,15 @@ struct WorkspaceSheetsModifier: ViewModifier {
 
 extension View {
     func workspaceSheets(
-        route: Binding<WorkspaceRoute?>,
+        route: Binding<WorkspaceSheetRoute?>,
         workspace: Workspace,
-        presenter: WorkspacePresenter,
+        presenter: WorkspacePresenter
     ) -> some View {
         modifier(
             WorkspaceSheetsModifier(
                 route: route,
                 workspace: workspace,
-                presenter: presenter,
+                presenter: presenter
             )
         )
     }

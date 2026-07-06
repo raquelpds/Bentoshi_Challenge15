@@ -13,22 +13,23 @@ struct TextArtefactPreview: View {
 
     var body: some View {
         GeometryReader { geometry in
-            Text(text)
-                .font(.system(size: 14, weight: .regular))
-                .foregroundStyle(.primary)
-                .multilineTextAlignment(.leading)
-                .lineLimit(
-                    maxTextLines(
-                        for: geometry.size.height
+            ZStack {
+                RoundedRectangle(cornerRadius: 15)
+                    .fill(Color.white)
+                
+                Text(text)
+                    .font(.body)
+                    .foregroundStyle(.black)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(maxTextLines(for: geometry.size.height))
+                    .truncationMode(.tail)
+                    .padding(16)
+                    .frame(
+                        width: geometry.size.width,
+                        height: geometry.size.height,
+                        alignment: .topLeading
                     )
-                )
-                .truncationMode(.tail)
-                .padding(16)
-                .frame(
-                    width: geometry.size.width,
-                    height: geometry.size.height,
-                    alignment: .topLeading
-                )
+            }
         }
     }
 
@@ -44,3 +45,4 @@ struct TextArtefactPreview: View {
         )
     }
 }
+

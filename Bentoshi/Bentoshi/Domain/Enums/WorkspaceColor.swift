@@ -9,14 +9,14 @@ import Foundation
 
 enum WorkspaceColor: String, CaseIterable, Codable {
     
+    case gray
     case red
     case orange
-    case blueDark
-    case blueLight
-    case green
-    case pink
     case yellow
-    case gray
+    case green
+    case blueLight
+    case blueDark
+    case pink
     case purple
     
 }

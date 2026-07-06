@@ -193,6 +193,18 @@ extension Artefact {
         )
     }
 
+    func getManualKeywords() -> [String] {
+        var keywords: [String] = []
+        
+        for searchIndex in searchIndexes {
+            if searchIndex.source == .manual {
+                keywords.append(searchIndex.keyword)
+            }
+        }
+        
+        return keywords
+    }
+    
     func extractKeywords(from values: [String]) -> [String] {
         values
             .flatMap {
@@ -297,18 +309,4 @@ extension Artefact {
     }
 }
 
-//extension Artefact {
-/////você deve capturar o caminho do arquivo (URL), inicializar o NSImage com ele e, em seguida, exibi-lo em um componente de visualização
-//    var previewImage: NSImage? {
-//        guard let url = archiveUrl else {
-//            return nil
-//        }
-//        let didAccess = url.startAccessingSecurityScopedResource()
-//        defer {
-//            if didAccess {
-//                url.stopAccessingSecurityScopedResource()
-//            }
-//        }
-//        return NSImage(contentsOf: url)
-//    }
-//}
+

@@ -23,7 +23,7 @@ final class SearchIndexService: SearchIndexServiceProtocol {
     }
     
     func deleteAutomaticIndexes(indexes: [SearchIndex]) throws {
-        for index in indexes {
+        for index in indexes where index.source == .automatic {
             try storage.remove(id: index.id)
         }
     }

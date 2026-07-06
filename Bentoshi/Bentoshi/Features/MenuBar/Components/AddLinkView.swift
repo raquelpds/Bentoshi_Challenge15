@@ -8,150 +8,140 @@
 import SwiftUI
 
 struct AddLinkView: View {
-
     @State private var isHovering = false
-    @State private var newReceivedLink = ""
-    @State private var newLinkName = ""
-
-    let presenter: MenuBarPresenter
-    let workspace: Workspace
     
-    var canSave: Bool {
-        let trimmedLink = newReceivedLink.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedName = newLinkName.trimmingCharacters(in: .whitespacesAndNewlines)
-        return !trimmedLink.isEmpty && !trimmedName.isEmpty
-    }
+    let presenter: MenuBarPresenter
+    let workspaces: [Workspace]
+    
+    @Binding var selectedWorkspace: Workspace?
+    @Binding var newReceivedLink: String
+    @Binding var newLinkName: String
     
     var body: some View {
-
-        VStack(spacing: 24) {
-
-            // Área principal
-            VStack(spacing: 18) {
+        VStack(spacing: 20) {
+            
+            // Área de drop
+            VStack(spacing: 14) {
                 
-                HStack {
-                    Spacer()
-
-                    Button {
-                        self.newReceivedLink = ""
-                        self.newLinkName = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.title3)
-                            .foregroundStyle(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                Image(systemName: "link.circle.fill")
-                    .font(.system(size: 55))
-                    .foregroundStyle(
-                        isHovering ? .blue : .secondary
-                    )
-
-                Text(
-                    isHovering
-                    ? "Solte o link aqui"
-                    : "Arraste um link para cá"
-                )
-                .font(.headline)
-
-                Text("ou adicione manualmente")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                VStack(spacing: 12) {
-
-                    TextField(
-                        "https://...",
-                        text: $newReceivedLink
-                    )
-                    .textFieldStyle(.roundedBorder)
-
-                    TextField(
-                        "Adicione um nome ao seu link",
-                        text: $newLinkName
-                    )
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit {
-                        Task {
-                            if canSave {
-                                await presenter.addArtefact(to: workspace, payload: .link(url: newReceivedLink, name: newLinkName))
-                                newLinkName = ""
-                                newReceivedLink = ""
-                            }
-                        }
-                    }
+                Image(systemName: newReceivedLink.isEmpty ? "link" : "link.circle.fill")
+                    .font(.system(size: 30))
+                    .foregroundStyle(isHovering || !newReceivedLink.isEmpty ? .blue : .secondary)
+                
+                if newReceivedLink.isEmpty {
+                    Text(isHovering ? "Solte o link aqui" : "Arraste um link")
+                        .font(.body)
+                } else {
+                    Text(newReceivedLink)
+                        .font(.body)
+                        .padding(.horizontal, 20)
+                        .multilineTextAlignment(.center)
                 }
 
             }
-            .padding()
-            .frame(height: 250)
             .frame(maxWidth: .infinity)
+            .frame(height: 140)
             .background(.regularMaterial)
             .overlay {
-
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(
-                        isHovering ? .blue : .gray.opacity(0.4),
-                        style: StrokeStyle(
-                            lineWidth: 2,
-                            dash: [8]
-                        )
-                    )
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-
-            // Botão
-            Button {
-                Task {
-                    if canSave {
-                        await presenter.addArtefact(to: workspace, payload: .link(url: newReceivedLink, name: newLinkName))
-                        newLinkName = ""
-                        newReceivedLink = ""
-                    }
+                if isHovering || !newReceivedLink.isEmpty {
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(.blue, style: StrokeStyle(lineWidth: 2))
+                } else {
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(.gray.opacity(0.5), style: StrokeStyle(lineWidth: 2, dash: [8]))
                 }
 
-            } label: {
-
-                Label(
-                    "Adicionar ao Workspace",
-                    systemImage: "plus.circle.fill"
-                )
-                .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .disabled(
-                newReceivedLink.isEmpty ||
-                newLinkName.isEmpty
-            )
-
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            
+            VStack(spacing: 14) {
+                
+                HStack {
+                    Text("Workspace:")
+                        .foregroundStyle(.secondary)
+                        .frame(width: 90, alignment: .trailing)
+                    
+                    Picker("", selection: $selectedWorkspace) {
+                        ForEach(workspaces) { workspace in
+                            Text(workspace.name)
+                                .frame(width: 350)
+                                .tag(workspace as Workspace?)
+                               
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    
+                    Spacer()
+                }
+                
+                HStack {
+                    Text("URL:")
+                        .foregroundStyle(.secondary)
+                        .frame(width: 90, alignment: .trailing)
+                    
+                    TextField("https://...", text: $newReceivedLink)
+                        .textFieldStyle(.roundedBorder)
+                        .controlSize(.large)
+                    
+                    Spacer()
+                }
+                
+                HStack {
+                    Text("Nome:")
+                        .foregroundStyle(.secondary)
+                        .frame(width: 90, alignment: .trailing)
+                    
+                    TextField("Adicione um nome ao seu link", text: $newLinkName)
+                        .textFieldStyle(.roundedBorder)
+                        .controlSize(.large)
+                        .onSubmit {
+                            Task {
+                                guard
+                                    let workspace = selectedWorkspace,
+                                    !newReceivedLink.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                                    !newLinkName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                                else {
+                                    return
+                                }
+                                
+                                await presenter.addArtefact(
+                                    to: workspace,
+                                    payload: .link(
+                                        url: newReceivedLink,
+                                        name: newLinkName,
+                                        keywords: []
+                                    )
+                                )
+                                
+                                newReceivedLink = ""
+                                newLinkName = ""
+                            }
+                        }
+                    
+                    Spacer()
+                }
+            }
+            
         }
         .padding(24)
         .frame(width: 400)
-        .background(.regularMaterial)
-        .clipShape(
-            RoundedRectangle(cornerRadius: 20)
-        )
-
+        .clipShape(RoundedRectangle(cornerRadius: 20))
         .dropDestination(for: URL.self) { items, _ in
-
+            
             guard let url = items.first else {
                 return false
             }
-
+            
             newReceivedLink = url.absoluteString
-
+            
             if newLinkName.isEmpty {
                 newLinkName = url.host() ?? ""
             }
-
+            
             return true
-
+            
         } isTargeted: { hovering in
-
             isHovering = hovering
-
         }
     }
 }

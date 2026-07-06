@@ -7,8 +7,8 @@
 
 import AppKit
 import Foundation
+import UniformTypeIdentifiers
 
-//raquel
 struct ArchivePreviewImageProvider {
 
     func previewImage(for artefact: Artefact) -> NSImage? {
@@ -17,6 +17,10 @@ struct ArchivePreviewImageProvider {
         }
 
         guard let url = artefact.archiveUrl else {
+            return nil
+        }
+
+        guard isImageFile(url) else {
             return nil
         }
 
@@ -29,5 +33,13 @@ struct ArchivePreviewImageProvider {
         }
 
         return NSImage(contentsOf: url)
+    }
+
+    private func isImageFile(_ url: URL) -> Bool {
+        guard let type = UTType(filenameExtension: url.pathExtension) else {
+            return false
+        }
+
+        return type.conforms(to: .image)
     }
 }

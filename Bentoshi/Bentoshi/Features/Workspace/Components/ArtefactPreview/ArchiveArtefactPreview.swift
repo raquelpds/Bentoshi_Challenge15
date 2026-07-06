@@ -11,6 +11,9 @@ import AppKit
 struct ArchiveArtefactPreview: View {
 
     let previewImage: NSImage?
+    let fileName: String
+    let backgroundColor: Color
+    
 
     var body: some View {
         GeometryReader { geometry in
@@ -38,11 +41,30 @@ struct ArchiveArtefactPreview: View {
                 .allowsHitTesting(false)
         } else {
             fallbackPreview
+                .frame(
+                    width: width,
+                    height: height
+                )
         }
     }
 
     private var fallbackPreview: some View {
-        RoundedRectangle(cornerRadius: 15)
-            .fill(Color.white)
+        ZStack {
+            RoundedRectangle(cornerRadius: 15)
+                .fill(Color.white)
+
+            VStack(spacing: 8) {
+                Image(systemName: "folder.fill")
+                    .font(.system(size: 52))
+                    .foregroundStyle(backgroundColor)
+
+                Text(fileName)
+                    .font(.body)
+                    .foregroundStyle(backgroundColor)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 12)
+            }
+        }
     }
 }

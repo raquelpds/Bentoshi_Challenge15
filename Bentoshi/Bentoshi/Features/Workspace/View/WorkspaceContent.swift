@@ -14,7 +14,8 @@ struct WorkspaceContent: View {
     let workspace: Workspace
     let presenter: WorkspacePresenter
 
-    @Binding var route: WorkspaceRoute?
+    @Binding var route: WorkspaceSheetRoute?
+    @Binding var detailRoute: WorkspaceDetailRoute?
     @Binding var alert: WorkspaceAlert?
 
     private let cellSize: CGFloat = 60
@@ -110,8 +111,15 @@ extension WorkspaceContent {
     ) -> some View {
         let width = displayedWidth(for: artefact)
         let height = displayedHeight(for: artefact)
+        
+        let backgroundColor = presenter.backgroundColor(
+            for: artefact,
+            palette: workspace.coverColor,
+            scheme: colorScheme
+        )
 
         ArtefactCard(
+            name: artefact.name,
             backgroundColor: presenter.backgroundColor(
                 for: artefact,
                 palette: workspace.coverColor,
@@ -124,9 +132,8 @@ extension WorkspaceContent {
                 type: artefact.type,
                 name: artefact.name,
                 content: artefact.content,
-                archivePreviewImage: presenter.archivePreviewImage(
-                        for: artefact
-                    )
+                archivePreviewImage: presenter.archivePreviewImage(for: artefact),
+                backgroundColor: backgroundColor
             ),
             onOpen: {
                 handleOpen(artefact)
@@ -146,9 +153,11 @@ extension WorkspaceContent {
             onResizeEnded: { translation in
                 handleResizeEnded(
                     artefact,
-                    translation: translation
-                )
-            }
+                    translation: translation)
+            },
+            showsHoverOverlay: presenter.shouldShowHoverOverlay(
+                    for: artefact
+            )
         )
         .frame(
             width: width,
@@ -185,7 +194,7 @@ extension WorkspaceContent {
 
     private func handleOpen(_ artefact: Artefact) {
         if presenter.shouldEditInsteadOfOpen(artefact) {
-            route = presenter.routeForUpdating(artefact)
+            detailRoute = .updateText(artefact)
             return
         }
 
@@ -196,8 +205,13 @@ extension WorkspaceContent {
 
         presenter.open(artefact)
     }
-
+    
     private func handleUpdate(_ artefact: Artefact) {
+        if artefact.type == .text {
+            detailRoute = .updateText(artefact)
+            return
+        }
+
         route = presenter.routeForUpdating(artefact)
     }
 

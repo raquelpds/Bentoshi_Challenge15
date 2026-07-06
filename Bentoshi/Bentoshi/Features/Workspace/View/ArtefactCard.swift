@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ArtefactCard: View {
 
+    let name: String
     let backgroundColor: Color
     let showsRevealInFinder: Bool
     let preview: ArtefactPreview
@@ -22,6 +23,7 @@ struct ArtefactCard: View {
     let onResizeEnded: (CGSize) -> Void
 
     @State private var isHovering = false
+    let showsHoverOverlay: Bool
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -37,24 +39,40 @@ struct ArtefactCard: View {
                     RoundedRectangle(cornerRadius: 15)
                 )
 
-            resizeHandle
+            if showsHoverOverlay && isHovering {
+                hoverOverlay
+                    .allowsHitTesting(false)
+            }
+
+//            resizeHandle
         }
         .clipShape(
             RoundedRectangle(cornerRadius: 15)
         )
         .clipped()
         .overlay {
-            if isHovering {
+            RoundedRectangle(cornerRadius: 15)
+                .strokeBorder(backgroundColor, lineWidth: 4)
+        }
+        .overlay {
+            if showsHoverOverlay && isHovering {
                 RoundedRectangle(cornerRadius: 15)
-                    .stroke(
+                    .strokeBorder(
                         .white.opacity(0.5),
                         lineWidth: 2
                     )
             }
         }
+        .overlay(alignment: .bottomTrailing) {
+            resizeHandle
+        }
         .contentShape(Rectangle())
         .onHover { hovering in
-            isHovering = hovering
+            guard showsHoverOverlay else { return }
+
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovering = hovering
+            }
         }
         .onTapGesture {
             onOpen()
@@ -86,21 +104,102 @@ struct ArtefactCard: View {
     }
 
     private var resizeHandle: some View {
-        Image(systemName: "arrow.down.right")
-            .font(.caption)
-            .foregroundStyle(.white)
-            .padding(8)
-            .background(.black)
-            .clipShape(Circle())
-            .padding(8)
-            .gesture(
-                DragGesture()
-                    .onChanged { value in
-                        onResizeChanged(value.translation)
-                    }
-                    .onEnded { value in
-                        onResizeEnded(value.translation)
-                    }
+        ZStack(alignment: .bottomTrailing) {
+            ResizeCornerHandle()
+                .stroke(
+                    Color.pink,
+                    style: StrokeStyle(
+                        lineWidth: 6,
+                        lineCap: .round,
+                        lineJoin: .round
+                    )
+                )
+                .frame(width: 36, height: 36)
+                .padding(.trailing, -4)
+                .padding(.bottom, -4)
+        }
+        .frame(width: 44, height: 44)
+        .contentShape(Rectangle())
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    onResizeChanged(value.translation)
+                }
+                .onEnded { value in
+                    onResizeEnded(value.translation)
+                }
+        )
+    }
+    
+    private var hoverOverlay: some View {
+        VStack {
+            Spacer()
+
+            ZStack(alignment: .leading) {
+                Color.black.opacity(0.4)
+
+                Text(name)
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+                    .padding(.horizontal, 12)
+            }
+            .frame(height: 48)
+        }
+        .frame(
+            maxWidth: .infinity,
+            maxHeight: .infinity,
+            alignment: .bottom
+        )
+        .transition(
+            .move(edge: .bottom).combined(with: .opacity)
+        )
+    }
+}
+
+struct ResizeCornerHandle: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+
+        let cornerRadius: CGFloat = 15
+        let horizontalLength: CGFloat = 26
+        let verticalLength: CGFloat = 26
+
+        let maxX = rect.maxX
+        let maxY = rect.maxY
+
+        path.move(
+            to: CGPoint(
+                x: maxX - horizontalLength,
+                y: maxY
             )
+        )
+
+        path.addLine(
+            to: CGPoint(
+                x: maxX - cornerRadius,
+                y: maxY
+            )
+        )
+
+        path.addQuadCurve(
+            to: CGPoint(
+                x: maxX,
+                y: maxY - cornerRadius
+            ),
+            control: CGPoint(
+                x: maxX,
+                y: maxY
+            )
+        )
+
+        path.addLine(
+            to: CGPoint(
+                x: maxX,
+                y: maxY - verticalLength
+            )
+        )
+
+        return path
     }
 }

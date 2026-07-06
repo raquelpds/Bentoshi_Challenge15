@@ -30,10 +30,10 @@ struct WorkspacesGrid: View {
         switch sortOption {
         case .alphabet:
             _workspaces = Query(
-                sort: \Workspace.name,
+                sort: \Workspace.normalizedName,
                 order: .forward
             )
-        
+            
         case .lastCreated:
             _workspaces = Query(
                 sort: \Workspace.createdAt,
@@ -50,7 +50,7 @@ struct WorkspacesGrid: View {
     
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: columns, spacing: 16) {
+            LazyVGrid(columns: columns, spacing: 32) {
                 Button {
                     showWorkspaceForm = true
                 } label: {
@@ -66,15 +66,17 @@ struct WorkspacesGrid: View {
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
-                        Button("Editar") {
+                        Button {
                             workspaceToUpdate = workspace
+                        } label: {
+                            Label("Editar", systemImage: "pencil")
                         }
                         
-                        Divider()
-                        
-                        Button("Excluir", role: .destructive) {
+                        Button(role: .destructive) {
                             workspaceToDelete = workspace
                             showWorkspaceDeleteAlert = true
+                        } label: {
+                            Label("Apagar", systemImage: "trash")
                         }
                     }
                 }
@@ -117,14 +119,16 @@ struct WorkspacesGrid: View {
         .navigationDestination(item: $workspaceToNavigate) { workspace in
             WorkspaceBuilder.build(
                 context: context,
+                sortOption: sortOption,
                 workspace: workspace
             )
         }
     }
     
     private let columns = [
-        GridItem(.flexible(), spacing: 16),
-        GridItem(.flexible(), spacing: 16),
-        GridItem(.flexible(), spacing: 16)
+        GridItem(.flexible(), spacing: 32),
+        GridItem(.flexible(), spacing: 32),
+        GridItem(.flexible(), spacing: 32),
+        GridItem(.flexible(), spacing: 32)
     ]
 }

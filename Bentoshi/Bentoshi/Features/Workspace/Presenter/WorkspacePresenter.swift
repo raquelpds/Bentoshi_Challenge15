@@ -8,16 +8,17 @@
 import SwiftUI
 import SwiftData
 import AppKit
+import UniformTypeIdentifiers
 
 enum ArtefactCreatePayload {
-    case archive(url: URL, name: String)
-    case link(url: String, name: String)
+    case archive(url: URL, name: String, keywords: [String])
+    case link(url: String, name: String, keywords: [String])
     case text(title: String, content: NSAttributedString)
 }
 
 enum ArtefactUpdatePayload {
-    case archive(newURL: URL, newName: String)
-    case link(newURL: String, newName: String)
+    case archive(newURL: URL, newName: String, keywords: [String])
+    case link(newURL: String, newName: String, keywords: [String])
     case text(newTitle: String, newContent: NSAttributedString)
 }
 
@@ -40,6 +41,7 @@ final class WorkspacePresenter {
     
     //raquel
     private let archivePreviewImageProvider = ArchivePreviewImageProvider()
+    
     
     init(interactor: WorkspaceInteractor) {
         self.interactor = interactor
@@ -77,32 +79,43 @@ final class WorkspacePresenter {
         }
     }
     
-    func updateWorkspace(_ workspace: Workspace, newName: String, newCoverColor: WorkspaceColor) async {
+    func updateWorkspaceName(_ workspace: Workspace, newName: String) async {
         do {
             workspace.name = newName
+            
+            try await interactor.updateWorkspace(workspace)
+        } catch {
+            print("Erro ao atualizar nome do workspace")
+        }
+    }
+    
+    func updateWorkspaceCoverColor(_ workspace: Workspace, newCoverColor: WorkspaceColor) async {
+        do {
             workspace.coverColor = newCoverColor
             
             try await interactor.updateWorkspace(workspace)
         } catch {
-            print("Erro ao atualizar workspace")
+            print("Erro ao atualizar cor da capa do workspace")
         }
     }
     
     func addArtefact(to workspace: Workspace, payload: ArtefactCreatePayload) async {
         switch payload {
             
-        case .archive(let url, let name):
+        case .archive(let url, let name, let keywords):
             await addArchiveArtefact(
                 to: workspace,
                 archiveUrl: url,
-                withName: name
+                withName: name,
+                keywords: keywords
             )
             
-        case .link(let url, let name):
+        case .link(let url, let name, let keywords):
             await addLinkArtefact(
                 to: workspace,
                 url: url,
-                withName: name
+                withName: name,
+                keywords: keywords
             )
             
         case .text(let name, let content):
@@ -114,7 +127,7 @@ final class WorkspacePresenter {
         }
     }
     
-    func addArchiveArtefact(to workspace: Workspace, archiveUrl: URL, withName name: String) async {
+    func addArchiveArtefact(to workspace: Workspace, archiveUrl: URL, withName name: String, keywords: [String]) async {
         do {
             let bookmark = try archiveUrl.bookmarkData(
                 options: [.withSecurityScope],
@@ -134,6 +147,11 @@ final class WorkspacePresenter {
                 bookmark: bookmark
             )
             
+            for keyword in keywords {
+                artefact.addManualSearchKeyword(keyword)
+
+            }
+            
             workspace.artefacts.append(artefact)
             
             try await interactor.updateWorkspace(workspace)
@@ -142,7 +160,7 @@ final class WorkspacePresenter {
         }
     }
     
-    func addLinkArtefact(to workspace: Workspace, url: String, withName name: String) async {
+    func addLinkArtefact(to workspace: Workspace, url: String, withName name: String, keywords: [String]) async {
         do {
             let artefact = Artefact(
                 name: name,
@@ -154,6 +172,11 @@ final class WorkspacePresenter {
                 width: ArtefactType.link.initialWidth,
                 height: ArtefactType.link.initialHeight
             )
+            
+            for keyword in keywords {
+                artefact.addManualSearchKeyword(keyword)
+
+            }
             
             workspace.artefacts.append(artefact)
             
@@ -188,18 +211,20 @@ final class WorkspacePresenter {
     func updateArtefact(_ artefact: Artefact, payload: ArtefactUpdatePayload) async{
         switch payload {
             
-        case .archive(let newUrl, let newName):
+        case .archive(let newUrl, let newName, let keywords):
             await updateArchiveArtefact(
                 artefact,
                 newUrl: newUrl,
-                newName: newName
+                newName: newName,
+                keywords: keywords
             )
             
-        case .link(let newUrl, let newName):
+        case .link(let newUrl, let newName, let keywords):
             await updateLinkArtefact(
                 artefact,
                 newUrl: newUrl,
-                newName: newName
+                newName: newName,
+                keywords: keywords
             )
             
         case .text(let newName, let newContent):
@@ -211,9 +236,17 @@ final class WorkspacePresenter {
         }
     }
     
-    func updateArchiveArtefact(_ artefact: Artefact, newUrl: URL, newName: String) async {
+    func updateArchiveArtefact(_ artefact: Artefact, newUrl: URL, newName: String, keywords: [String]) async {
         do {
             artefact.name = newName
+            
+            
+            artefact.searchIndexes.removeAll { $0.source == .manual }
+
+            for keyword in keywords {
+                artefact.addManualSearchKeyword(keyword)
+            }
+            
             artefact.bookmark = try newUrl.bookmarkData(
                 options: [.withSecurityScope],
                 includingResourceValuesForKeys: nil,
@@ -227,10 +260,18 @@ final class WorkspacePresenter {
         }
     }
     
-    func updateLinkArtefact(_ artefact: Artefact, newUrl: String, newName: String) async {
+    func updateLinkArtefact(_ artefact: Artefact, newUrl: String, newName: String, keywords: [String]) async {
+        print("Antes de salvar:", keywords)
         do {
             artefact.name = newName
             artefact.content = newUrl
+            
+            artefact.searchIndexes.removeAll { $0.source == .manual }
+
+            for keyword in keywords {
+                artefact.addManualSearchKeyword(keyword)
+            }
+            
             try await interactor.updateArtefact(artefact)
             
         } catch {
@@ -502,6 +543,23 @@ extension WorkspacePresenter {
         
         attributed.string
     }
+    
+    //raquel
+    func shouldShowHoverOverlay(for artefact: Artefact) -> Bool {
+        guard artefact.type == .archive else {
+            return false
+        }
+
+        guard let url = artefact.archiveUrl else {
+            return false
+        }
+
+        guard let type = UTType(filenameExtension: url.pathExtension) else {
+            return false
+        }
+
+        return type.conforms(to: .image)
+    }
 }
 
 
@@ -510,7 +568,7 @@ extension WorkspacePresenter {
 
     func routeForUpdating(
         _ artefact: Artefact
-    ) -> WorkspaceRoute {
+    ) -> WorkspaceSheetRoute? {
         switch artefact.type {
         case .archive:
             return .updateArchive(artefact)
@@ -519,7 +577,7 @@ extension WorkspacePresenter {
             return .updateLink(artefact)
 
         case .text:
-            return .updateText(artefact)
+            return nil
         }
     }
 

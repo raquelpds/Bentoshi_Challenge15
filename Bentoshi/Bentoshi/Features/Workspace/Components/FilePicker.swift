@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct FilePicker: View {
     
@@ -49,6 +50,15 @@ struct FilePicker: View {
             }
         }
         
+        var initialKeywords: [String] {
+            switch self {
+            case .create:
+                return []
+            case .edit(let artefact):
+                return artefact.getManualKeywords()
+            }
+        }
+        
         var isEditing: Bool {
             if case .edit = self {
                 return true
@@ -61,19 +71,23 @@ struct FilePicker: View {
     @State private var fileUrl: URL?
     @State private var isHovering = false
     @State private var fileName: String
+    @State private var extractKeywords: [String]
+    @State private var allKeywords = ""
+    @State private var showKeywordsInfo = false
     
     @Environment(\.dismiss) private var dismiss
     
     let mode: Mode
-    var onSave: (_ fileUrl: URL, _ fileName: String) -> Void
+    var onSave: (_ fileUrl: URL, _ fileName: String, _ extractKeywords: [String]) -> Void
     
     init(
         mode: Mode = .create,
-        onSave: @escaping (_ fileUrl: URL, _ fileName: String) -> Void
+        onSave: @escaping (_ fileUrl: URL, _ fileName: String, _ extractKeywords: [String]) -> Void
     ) {
         self.mode = mode
         self.onSave = onSave
         _fileName = State(initialValue: mode.initialName)
+        _extractKeywords = State(initialValue: mode.initialKeywords)
     }
     
     var body: some View {
@@ -128,34 +142,34 @@ private extension FilePicker {
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 260)
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 18)
-                .fill(Color.secondary.opacity(0.3))
-        )
+        .frame(height: 200)
+        .background(.regularMaterial)
         .overlay {
-            RoundedRectangle(cornerRadius: 18)
-                .stroke(
-                    dropZoneStrokeColor,
-                    style: StrokeStyle(lineWidth: 2, dash: [8])
-                )
+            if isHovering || fileUrl != nil {
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(.blue, style: StrokeStyle(lineWidth: 2))
+            } else {
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(.gray.opacity(0.5), style: StrokeStyle(lineWidth: 2, dash: [8]))
+            }
+            
         }
-        .animation(.easeInOut(duration: 0.2), value: isHovering)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
     }
     
     func currentFileView(_ fileUrl: URL) -> some View {
         VStack(spacing: 14) {
-            Image(systemName: "doc.fill")
-                .font(.system(size: 54))
-                .foregroundStyle(.secondary)
-            
+            FilePreview(url: fileUrl)
+                .frame(width: 50, height: 60)
+
             Text(fileUrl.lastPathComponent)
                 .font(.headline)
-            
-            Text("Arquivo atual mantido")
+                .lineLimit(1)
+       //         .padding(.bottom, 10)
+
+            Text("\(fileType(for: fileUrl)) - \(fileSize(for: fileUrl))")
+                .font(.body)
                 .foregroundStyle(.secondary)
-                .font(.caption)
             
             Button {
                 openFinder()
@@ -167,9 +181,9 @@ private extension FilePicker {
     }
     
     var emptyDropZoneView: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 12) {
             Image(systemName: isHovering ? "arrow.down.doc.fill" : "tray.and.arrow.down.fill")
-                .font(.system(size: 46))
+                .font(.system(size: 38))
                 .foregroundStyle(dropZoneIconColor)
             
             Text(emptyDropZoneTitle)
@@ -185,56 +199,82 @@ private extension FilePicker {
                 Label("Escolher arquivo", systemImage: "folder")
             }
             .buttonStyle(.borderedProminent)
-            
-            Text("Formatos suportados conforme o sistema")
-                .foregroundStyle(.secondary)
-                .font(.caption)
         }
     }
     
     func selectedFileView(_ fileUrl: URL) -> some View {
-        VStack(spacing: 16) {
-            HStack {
-                Spacer()
-                
-                Button {
-                    withAnimation {
-                        self.fileUrl = nil
-                        fileName = mode.initialName
-                    }
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title3)
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-            }
-            
-            Spacer()
-            
-            Image(systemName: "doc.fill")
-                .font(.system(size: 54))
-                .foregroundStyle(.blue)
-            
-            VStack(spacing: 4) {
-                Text(fileUrl.lastPathComponent)
-                    .font(.headline)
-                
-                Text("Novo arquivo selecionado")
-                    .foregroundStyle(.secondary)
-            }
-            
-            Spacer()
+        VStack(spacing: 4) {
+
+            FilePreview(url: fileUrl)
+                .frame(width: 50, height: 60)
+
+            Text(fileUrl.lastPathComponent)
+                .font(.headline)
+                .lineLimit(1)
+              //  .padding(.bottom, 10)
+
+            Text("\(fileType(for: fileUrl)) - \(fileSize(for: fileUrl))")
+                .font(.body)
+                .foregroundStyle(.secondary)
         }
     }
     
     var fileNameField: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Nome do arquivo")
-                .font(.headline)
-            
+                .foregroundStyle(.secondary)
+
             TextField("Digite um nome", text: $fileName)
                 .textFieldStyle(.roundedBorder)
+                .onSubmit {
+                    if canSave {
+                        saveFile()
+                    }
+                }
+            
+            HStack {
+                Text("Palavras chave (opcional)")
+                    .foregroundStyle(.secondary)
+                
+                Button {
+                    showKeywordsInfo.toggle()
+                } label: {
+                    Image(systemName: "questionmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .popover(isPresented: $showKeywordsInfo) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Separe as palavras‑chave utilizando uma vírgula comum.")
+                    }
+                    .padding()
+                }
+            }
+            
+
+            TextField("Palavra-chave 1, Palavra-chave 2, Palavra-chave 3", text: $allKeywords)
+                .textFieldStyle(.roundedBorder)
+                .onSubmit {
+                    commitPendingKeywords()
+                }
+            
+            FlowLayout(spacing: 8) {
+                ForEach(extractKeywords, id: \.self) { keyword in
+                    HStack(spacing: 4){
+                        Text(keyword)
+                        
+                        Image(systemName: "xmark")
+                            .font(.system(size: 10))
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(.gray.opacity(0.15))
+                    .clipShape(Capsule())
+                    .onTapGesture {
+                        extractKeywords.removeAll { $0 == keyword }
+                    }
+                }
+            }
         }
     }
     
@@ -277,7 +317,8 @@ private extension FilePicker {
         guard let url = selectedOrCurrentFileUrl else { return }
         guard !trimmedName.isEmpty else { return }
         
-        onSave(url, trimmedName)
+        commitPendingKeywords()
+        onSave(url, trimmedName, extractKeywords)
         dismiss()
     }
     
@@ -295,8 +336,62 @@ private extension FilePicker {
             fileName = url.lastPathComponent
         }
     }
+    
+    private func fileType(for url: URL) -> String {
+
+        guard
+            let type = UTType(filenameExtension: url.pathExtension)
+        else {
+            return url.pathExtension.uppercased()
+        }
+
+        return type.localizedDescription ?? url.pathExtension.uppercased()
+    }
+    
+    private func fileSize(for url: URL) -> String {
+        
+        guard
+            let values = try? url.resourceValues(forKeys: [.fileSizeKey]),
+            let size = values.fileSize
+        else {
+            return ""
+        }
+
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+
+        return formatter.string(fromByteCount: Int64(size))
+    }
+    
+    func commitPendingKeywords() {
+        let newKeywords = allKeywords
+            .split(whereSeparator: { $0 == "," || $0 == ";" })
+            .map { normalizeKeyword(String($0)) }
+            .filter { !$0.isEmpty }
+
+        guard !newKeywords.isEmpty else { return }
+
+        addKeywords(newKeywords)
+
+        allKeywords = ""
+    }
+
+    private func addKeywords(_ newKeywords: [String]) {
+        var merged = Set(extractKeywords)
+        merged.formUnion(newKeywords)
+
+        extractKeywords = merged
+            .sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+    }
+
+    private func normalizeKeyword(_ value: String) -> String {
+        value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .folding(options: .diacriticInsensitive, locale: .current)
+    }
 }
 
 #Preview("Create") {
-    FilePicker(mode: .create) { _, _ in }
+    FilePicker(mode: .create) { _, _, _ in }
 }
