@@ -16,13 +16,14 @@ struct ArtefactPreview: View {
     let content: String
     let archivePreviewImage: NSImage?
     let backgroundColor: Color
+    let textFormatted: NSAttributedString
     
     var body: some View {
 
         switch type {
 
         case .text:
-            TextArtefactPreview(text: content)
+            TextArtefactPreview(text: textFormatted)
 
         case .link:
             LinkArtefactPreview(name: name, url: content)

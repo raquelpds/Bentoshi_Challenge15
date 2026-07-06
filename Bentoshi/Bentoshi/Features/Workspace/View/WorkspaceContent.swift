@@ -201,7 +201,8 @@ extension WorkspaceContent {
                 name: artefact.name,
                 content: artefact.content,
                 archivePreviewImage: presenter.archivePreviewImage(for: artefact),
-                backgroundColor: backgroundColor
+                backgroundColor: backgroundColor,
+                textFormatted: artefact.getFormattedText()
             ),
             onOpen: {
                 handleOpen(artefact)
