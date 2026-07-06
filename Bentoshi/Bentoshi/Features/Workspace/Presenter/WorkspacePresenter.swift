@@ -300,7 +300,7 @@ final class WorkspacePresenter {
             
         case .text:
             // openTextEditor(artefact)
-            break // apagar essa linha depois que implementar
+            break
         }
     }
     

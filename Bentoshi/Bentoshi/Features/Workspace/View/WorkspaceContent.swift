@@ -19,13 +19,13 @@ struct WorkspaceContent: View {
     @Binding var alert: WorkspaceAlert?
 
     private let cellSize: CGFloat = 60
-    private let columns: Int = 20
+    private let columns: Int = 25
     private let horizontalPadding: CGFloat = 32
     private let verticalPadding: CGFloat = 24
 
     @State private var rows: Int = 30
     
-    private let artefactGap: CGFloat = 4
+    private let artefactGap: CGFloat = 16
     
     private var minimumRowsNeededForArtefacts: Int {
         let maxArtefactRow = workspace.artefacts.map { artefact in
@@ -46,6 +46,7 @@ struct WorkspaceContent: View {
 
     var body: some View {
         GeometryReader { geometry in
+//            let columns = columnCount(for: geometry.size.width)
             let gridWidth = CGFloat(columns) * cellSize
             let effectiveRows = max(rows, minimumRowsNeededForArtefacts)
             let gridHeight = CGFloat(effectiveRows) * cellSize
@@ -138,6 +139,14 @@ extension WorkspaceContent {
         + displayedHeight / 2
         + dragOffset(for: artefact).height
     }
+    
+//    private func columnCount(for width: CGFloat) -> Int {
+//        let availableWidth = width - (horizontalPadding * 2)
+//
+//        let columns = Int(availableWidth / cellSize)
+//
+//        return max(columns, 1)
+//    }
 
     @ViewBuilder
     private func loadMoreTrigger(
@@ -176,6 +185,8 @@ extension WorkspaceContent {
         )
 
         ArtefactCard(
+            workspaceColor: workspace.coverColor,
+            artefactType: artefact.type,
             name: artefact.name,
             backgroundColor: presenter.backgroundColor(
                 for: artefact,

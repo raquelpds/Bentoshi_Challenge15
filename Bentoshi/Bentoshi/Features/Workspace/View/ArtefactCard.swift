@@ -8,6 +8,11 @@
 import SwiftUI
 
 struct ArtefactCard: View {
+    
+    @Environment(\.colorScheme) private var colorScheme
+
+    let workspaceColor: WorkspaceColor
+    let artefactType: ArtefactType
 
     let name: String
     let backgroundColor: Color
@@ -24,6 +29,14 @@ struct ArtefactCard: View {
 
     @State private var isHovering = false
     let showsHoverOverlay: Bool
+    
+    private var artefactStrokeColor: Color {
+        ArtefactColorPalette.color(
+            for: artefactType,
+            workspaceBaseColor: workspaceColor,
+            scheme: colorScheme
+        )
+    }
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -52,7 +65,7 @@ struct ArtefactCard: View {
         .clipped()
         .overlay {
             RoundedRectangle(cornerRadius: 15)
-                .strokeBorder(backgroundColor, lineWidth: 4)
+                .strokeBorder(artefactStrokeColor, lineWidth: 4)
         }
         .overlay {
             if showsHoverOverlay && isHovering {
@@ -106,10 +119,8 @@ struct ArtefactCard: View {
     private var resizeHandle: some View {
         ZStack(alignment: .bottomTrailing) {
             ResizeCornerHandle()
-                .stroke(
-                    Color.pink,
-                    style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round)
-                )
+                .stroke(WorkspaceColorPalette.color(for: workspaceColor, scheme: colorScheme),
+                    style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round))
                 .frame(width: 36, height: 36)
                 .padding(.trailing, -4)
                 .padding(.bottom, -4)
