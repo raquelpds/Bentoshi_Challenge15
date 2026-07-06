@@ -19,6 +19,7 @@ struct WorkspaceContent: View {
     @Binding var alert: WorkspaceAlert?
 
     private let cellSize: CGFloat = 60
+    private let columns: Int = 20
     private let horizontalPadding: CGFloat = 32
     private let verticalPadding: CGFloat = 24
 
@@ -45,14 +46,13 @@ struct WorkspaceContent: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let columns = columnCount(for: geometry.size.width)
             let gridWidth = CGFloat(columns) * cellSize
             let effectiveRows = max(rows, minimumRowsNeededForArtefacts)
             let gridHeight = CGFloat(effectiveRows) * cellSize
             
             let sidePadding = max(horizontalPadding,(geometry.size.width - gridWidth) / 2)
 
-            ScrollView(.vertical) {
+            ScrollView([.horizontal, .vertical]) {
                 ZStack(alignment: .topLeading) {
                     GridBackground(
                         rows: effectiveRows,
@@ -137,14 +137,6 @@ extension WorkspaceContent {
         CGFloat(artefact.gridRow) * cellSize
         + displayedHeight / 2
         + dragOffset(for: artefact).height
-    }
-    
-    private func columnCount(for width: CGFloat) -> Int {
-        let availableWidth = width - (horizontalPadding * 2)
-
-        let columns = Int(availableWidth / cellSize)
-
-        return max(columns, 1)
     }
 
     @ViewBuilder

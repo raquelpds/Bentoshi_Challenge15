@@ -11,6 +11,7 @@ import SwiftData
 @main
 struct BentoshiApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     let larguraTela = NSScreen.main?.visibleFrame.width ?? 1440
     
     let container: ModelContainer
@@ -18,24 +19,30 @@ struct BentoshiApp: App {
     init() {
         do {
             container = try ModelContainer(
-                    for: Workspace.self,
-                    Artefact.self,
-                    SearchIndex.self
-                )
+                for: Workspace.self,
+                Artefact.self,
+                SearchIndex.self
+            )
             
             appDelegate.container = container
         } catch {
             fatalError("Error: \(error)")
         }
-        
     }
     
     var body: some Scene {
         WindowGroup {
             AppRootView()
+                .frame(
+                    minWidth: 1100,
+                    minHeight: 800
+                )
         }
-        //tamanho inicial ao abrir
-        .defaultSize(width: larguraTela * 0.9, height: 900)
+        .defaultSize(
+            width: larguraTela * 0.9,
+            height: 900
+        )
+        .windowResizability(.contentSize)
         .modelContainer(container)
     }
 }

@@ -15,8 +15,11 @@ struct AppRootView: View {
     var body: some View {
         NavigationStack {
             HomeBuilder.build(context: context)
-                .frame(minWidth: 1100, minHeight: 800)
         }
+        .frame(
+            minWidth: 1100,
+            minHeight: 800
+        )
     }
 }
 
