@@ -13,7 +13,7 @@ enum WorkspaceSheetRoute: Identifiable {
     case newLink
     case updateArchive(Artefact)
     case updateLink(Artefact)
-    
+
     var id: String {
         switch self {
         case .newArchive:
@@ -74,6 +74,9 @@ struct WorkspaceView: View {
     @State private var showColorPickerPopover = false
     
     let sortOption: SortOption
+    
+    let workspace: Workspace
+    
     var current: Workspace? {
         workspaces.first {$0.id == selectedID}
     }
@@ -81,16 +84,17 @@ struct WorkspaceView: View {
     init(presenter: WorkspacePresenter, sortOption: SortOption, workspace: Workspace) {
         _presenter = State(initialValue: presenter)
         _selectedID = State(initialValue: workspace.id)
-        
+
         self.sortOption = sortOption
-        
+        self.workspace = workspace
+
         switch sortOption {
         case .alphabet:
             _workspaces = Query(sort: \Workspace.normalizedName, order: .forward)
-            
+
         case .lastCreated:
             _workspaces = Query(sort: \Workspace.createdAt, order: .reverse)
-            
+
         case .lastModified:
             _workspaces = Query(sort: \Workspace.updatedAt, order: .reverse)
         }
@@ -208,10 +212,10 @@ struct WorkspaceView: View {
                     presenter: presenter
                 )
                 ZStack {
-                    WorkspaceDetailContent(
+                    WorkspaceContent(
                         workspace: current,
                         presenter: presenter,
-                        sheetRoute: $sheetRoute,
+                        route: $sheetRoute,
                         detailRoute: $detailRoute,
                         alert: $alert
                     )

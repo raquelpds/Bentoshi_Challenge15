@@ -7,36 +7,57 @@
 
 import SwiftUI
 
+import SwiftUI
+
+import SwiftUI
+
 struct GridBackground: View {
 
     let rows: Int
     let columns: Int
-    let cellSize: CGFloat = 60
+    let cellSize: CGFloat
+
+    private let dotSize: CGFloat = 3
+    private let dotSpacing: CGFloat = 32
+
+    private let dotColor = Color(
+        red: 230 / 255,
+        green: 230 / 255,
+        blue: 230 / 255
+    )
 
     var body: some View {
+        let width = CGFloat(columns) * cellSize
+        let height = CGFloat(rows) * cellSize
 
         Canvas { context, size in
+            var y: CGFloat = dotSize / 2
 
-            var path = Path()
+            while y <= height - dotSize / 2 {
+                var x: CGFloat = dotSize / 2
 
-            for row in 0...rows {
+                while x <= width - dotSize / 2 {
+                    let rect = CGRect(
+                        x: x - dotSize / 2,
+                        y: y - dotSize / 2,
+                        width: dotSize,
+                        height: dotSize
+                    )
 
-                let y = CGFloat(row) * cellSize
+                    context.fill(
+                        Path(ellipseIn: rect),
+                        with: .color(dotColor)
+                    )
 
-                path.move(to: CGPoint(x: 0, y: y))
-                path.addLine (to: CGPoint(x: CGFloat(columns) * cellSize, y: y))
+                    x += dotSpacing
+                }
+
+                y += dotSpacing
             }
-
-            for column in 0...columns {
-
-                let x = CGFloat(column) * cellSize
-
-                path.move(to: CGPoint(x: x, y: 0))
-                path.addLine(to: CGPoint(x: x,y: CGFloat(rows) * cellSize))
-            }
-
-            context.stroke(path, with: .color(.gray.opacity(0.3)))
         }
-        .frame( width: CGFloat(columns) * cellSize, height: CGFloat(rows) * cellSize)
+        .frame(
+            width: width,
+            height: height
+        )
     }
 }
