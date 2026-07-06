@@ -1,0 +1,32 @@
+@startuml
+left to right direction
+
+actor "Usuário" as User
+actor "Sistema de Arquivos\nmacOS" as FileSystem
+actor "Aplicativos Externos" as ExternalApps
+actor "Navegador" as Browser
+
+rectangle "Bentochi" {
+  usecase "Gerenciar espaços\nde organização" as UC1
+  usecase "Gerenciar artefatos" as UC2
+  usecase "Organizar layout\ndos artefatos" as UC3
+  usecase "Buscar conteúdos" as UC4
+  usecase "Abrir conteúdos" as UC5
+  usecase "Personalizar espaço" as UC6
+  usecase "Detectar arquivo\nindisponível" as UC7
+}
+
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+
+UC5 --> ExternalApps : abrir arquivo
+UC5 --> Browser : abrir link
+UC7 --> FileSystem : verificar arquivo
+
+UC5 ..> UC7 : <<include>>
+
+@enduml

@@ -1,0 +1,36 @@
+@startuml
+left to right direction
+
+actor "Usuário" as User
+actor "Sistema de Arquivos\nmacOS" as FileSystem
+actor "Aplicativos Externos" as ExternalApps
+actor "Navegador" as Browser
+
+rectangle "Bentochi" {
+  usecase "Abrir conteúdo" as UC1
+  usecase "Abrir arquivo" as UC2
+  usecase "Abrir link" as UC3
+  usecase "Abrir texto" as UC4
+  usecase "Verificar existência\ndo arquivo" as UC5
+  usecase "Exibir erro de\narquivo indisponível" as UC6
+  usecase "Atualizar referência\ndo arquivo" as UC7
+  usecase "Excluir referência\ninválida" as UC8
+}
+
+User --> UC1
+
+UC1 <|-- UC2
+UC1 <|-- UC3
+UC1 <|-- UC4
+
+UC2 ..> UC5 : <<include>>
+UC5 --> FileSystem
+
+UC2 --> ExternalApps
+UC3 --> Browser
+
+UC6 ..> UC2 : <<extend>>
+UC7 ..> UC6 : <<extend>>
+UC8 ..> UC6 : <<extend>>
+
+@enduml
