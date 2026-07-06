@@ -15,6 +15,8 @@ enum AddArtefactAction {
 
 struct FloatingAddButton: View {
     @State private var isExpanded = false
+    @State private var hoveredButton: AddArtefactAction?
+    @State private var isHoveringMainButton = false
 
     let onAction: (AddArtefactAction) -> Void
 
@@ -23,15 +25,24 @@ struct FloatingAddButton: View {
 
             if isExpanded {
 
-                floatingButton(systemImage: "archivebox") {
+                floatingButton(
+                    systemImage: "folder",
+                    actionType: .archive
+                ) {
                     onAction(.archive)
                 }
 
-                floatingButton(systemImage: "textformat.characters") {
+                floatingButton(
+                    systemImage: "textformat.characters",
+                    actionType: .text
+                ) {
                     onAction(.text)
                 }
 
-                floatingButton(systemImage: "link") {
+                floatingButton(
+                    systemImage: "link",
+                    actionType: .link
+                ) {
                     onAction(.link)
                 }
             }
@@ -46,8 +57,14 @@ struct FloatingAddButton: View {
                     .foregroundStyle(.white)
                     .clipShape(Circle())
                     .shadow(radius: 6)
+                    .scaleEffect(isHoveringMainButton ? 1.15 : 1.0)
             }
             .buttonStyle(.plain)
+            .onHover { hovering in
+                withAnimation(.spring(response: 0.25, dampingFraction: 0.75)) {
+                    isHoveringMainButton = hovering
+                }
+            }
         }
         .padding(24)
         .onHover { hovering in
@@ -59,18 +76,25 @@ struct FloatingAddButton: View {
 
     private func floatingButton(
         systemImage: String,
+        actionType: AddArtefactAction,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.title2)
+                .font(.title2.weight(.bold))
                 .frame(width: 50, height: 50)
-                .background(.gray.opacity(0.9))
-                .foregroundStyle(.white)
+                .background(Color.neutralColor1)
+                .foregroundStyle(Color.buttonIcon)
                 .clipShape(Circle())
                 .shadow(radius: 4)
+                .scaleEffect(hoveredButton == actionType ? 1.18 : 1.0)
         }
         .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.75)) {
+                hoveredButton = hovering ? actionType : nil
+            }
+        }
         .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 }

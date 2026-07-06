@@ -108,11 +108,7 @@ struct ArtefactCard: View {
             ResizeCornerHandle()
                 .stroke(
                     Color.pink,
-                    style: StrokeStyle(
-                        lineWidth: 6,
-                        lineCap: .round,
-                        lineJoin: .round
-                    )
+                    style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round)
                 )
                 .frame(width: 36, height: 36)
                 .padding(.trailing, -4)
@@ -120,6 +116,13 @@ struct ArtefactCard: View {
         }
         .frame(width: 44, height: 44)
         .contentShape(Rectangle())
+        .onHover { hovering in
+            if hovering {
+                NSCursor.resizeLeftRight.push()
+            } else {
+                NSCursor.pop()
+            }
+        }
         .gesture(
             DragGesture()
                 .onChanged { value in
@@ -203,3 +206,4 @@ struct ResizeCornerHandle: Shape {
         return path
     }
 }
+

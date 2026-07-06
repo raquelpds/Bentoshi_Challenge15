@@ -67,7 +67,7 @@ final class WorkspaceInteractor {
 
 //raquel
 extension WorkspaceInteractor {
-
+    
     func moveArtefact(
         _ artefact: Artefact,
         in workspace: Workspace,
@@ -84,15 +84,15 @@ extension WorkspaceInteractor {
         ) else {
             return
         }
-
+        
         artefact.gridRow = row
         artefact.gridColumn = column
         artefact.updatedAt = Date()
         artefact.workspace?.updatedAt = Date()
-
+        
         try await updateArtefact(artefact)
     }
-
+    
     func resizeArtefact(
         _ artefact: Artefact,
         in workspace: Workspace,
@@ -103,12 +103,12 @@ extension WorkspaceInteractor {
             artefact.type.initialWidth,
             width
         )
-
+        
         let newHeight = max(
             artefact.type.initialHeight,
             height
         )
-
+        
         guard isPlacementValid(
             artefact: artefact,
             in: workspace,
@@ -119,15 +119,15 @@ extension WorkspaceInteractor {
         ) else {
             return
         }
-
+        
         artefact.width = newWidth
         artefact.height = newHeight
         artefact.updatedAt = Date()
         artefact.workspace?.updatedAt = Date()
-
+        
         try await updateArtefact(artefact)
     }
-
+    
     private func isPlacementValid(
         artefact: Artefact,
         in workspace: Workspace,
@@ -136,33 +136,33 @@ extension WorkspaceInteractor {
         width: Int,
         height: Int
     ) -> Bool {
-        let rows = 20
         let columns = 20
-
+        
         if row < 0 ||
             column < 0 ||
-            row + height > rows ||
+            width <= 0 ||
+            height <= 0 ||
             column + width > columns {
             return false
         }
-
+        
         for other in workspace.artefacts {
             if other.id == artefact.id {
                 continue
             }
-
+            
             let overlaps = !(
                 column + width <= other.gridColumn ||
                 column >= other.gridColumn + other.width ||
                 row + height <= other.gridRow ||
                 row >= other.gridRow + other.height
             )
-
+            
             if overlaps {
                 return false
             }
         }
-
+        
         return true
     }
 }

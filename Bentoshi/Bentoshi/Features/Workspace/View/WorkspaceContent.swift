@@ -19,8 +19,23 @@ struct WorkspaceContent: View {
     @Binding var alert: WorkspaceAlert?
 
     private let cellSize: CGFloat = 60
-    private let rows = 20
-    private let columns = 20
+    private let horizontalPadding: CGFloat = 32
+    private let verticalPadding: CGFloat = 24
+
+    @State private var rows: Int = 30
+    
+    private let artefactGap: CGFloat = 4
+    
+    private var minimumRowsNeededForArtefacts: Int {
+        let maxArtefactRow = workspace.artefacts.map { artefact in
+            artefact.gridRow + artefact.height
+        }
+        .max() ?? 0
+
+        return maxArtefactRow + 10
+    }
+    
+    
 
     @State private var dragOffsets: [UUID: CGSize] = [:]
     @State private var resizeOffsets: [UUID: CGSize] = [:]
@@ -29,23 +44,39 @@ struct WorkspaceContent: View {
     @State private var selectedArtefactID: UUID?
 
     var body: some View {
-        ScrollView([.horizontal, .vertical]) {
-            ZStack(alignment: .topLeading) {
-                GridBackground(
-                    rows: rows,
-                    columns: columns
-                )
+        GeometryReader { geometry in
+            let columns = columnCount(for: geometry.size.width)
+            let gridWidth = CGFloat(columns) * cellSize
+            let effectiveRows = max(rows, minimumRowsNeededForArtefacts)
+            let gridHeight = CGFloat(effectiveRows) * cellSize
+            
+            let sidePadding = max(horizontalPadding,(geometry.size.width - gridWidth) / 2)
 
-                ForEach(workspace.artefacts) { artefact in
-                    positionedArtefactCard(artefact)
+            ScrollView(.vertical) {
+                ZStack(alignment: .topLeading) {
+                    GridBackground(
+                        rows: effectiveRows,
+                        columns: columns,
+                        cellSize: cellSize
+                    )
+
+                    ForEach(workspace.artefacts) { artefact in
+                        positionedArtefactCard(artefact)
+                    }
+
+                    loadMoreTrigger(
+                        effectiveRows: effectiveRows,
+                        gridHeight: gridHeight
+                    )
                 }
+                .frame(
+                    width: gridWidth,
+                    height: gridHeight,
+                    alignment: .topLeading
+                )
+                .padding(.horizontal, sidePadding)
+                .padding(.vertical, verticalPadding)
             }
-            .frame(
-                width: CGFloat(columns) * cellSize,
-                height: CGFloat(rows) * cellSize,
-                alignment: .topLeading
-            )
-            .padding()
         }
     }
 }
@@ -53,6 +84,14 @@ struct WorkspaceContent: View {
 //funções de cálculo de tela
 //raquel
 extension WorkspaceContent {
+    
+    private func visualWidth(from gridWidth: CGFloat) -> CGFloat {
+        max(cellSize - artefactGap, gridWidth - artefactGap)
+    }
+
+    private func visualHeight(from gridHeight: CGFloat) -> CGFloat {
+        max(cellSize - artefactGap, gridHeight - artefactGap)
+    }
 
     private func resizeOffset(for artefact: Artefact) -> CGSize {
         resizeOffsets[artefact.id] ?? .zero
@@ -98,6 +137,32 @@ extension WorkspaceContent {
         CGFloat(artefact.gridRow) * cellSize
         + displayedHeight / 2
         + dragOffset(for: artefact).height
+    }
+    
+    private func columnCount(for width: CGFloat) -> Int {
+        let availableWidth = width - (horizontalPadding * 2)
+
+        let columns = Int(availableWidth / cellSize)
+
+        return max(columns, 1)
+    }
+
+    @ViewBuilder
+    private func loadMoreTrigger(
+        effectiveRows: Int,
+        gridHeight: CGFloat
+    ) -> some View {
+        Color.clear
+            .frame(width: 1, height: 1)
+            .position(
+                x: 1,
+                y: max(0, gridHeight - 300)
+            )
+            .onAppear {
+                if rows <= effectiveRows {
+                    rows = effectiveRows + 20
+                }
+            }
     }
 }
 
@@ -160,8 +225,8 @@ extension WorkspaceContent {
             )
         )
         .frame(
-            width: width,
-            height: height
+            width: visualWidth(from: width),
+            height: visualHeight(from: height)
         )
         .position(
             x: positionX(
@@ -262,8 +327,20 @@ extension WorkspaceContent {
         deltaRow: Int,
         deltaColumn: Int
     ) {
-        let newRow = artefact.gridRow + deltaRow
-        let newColumn = artefact.gridColumn + deltaColumn
+        let newRow = max(
+            0,
+            artefact.gridRow + deltaRow
+        )
+
+        let newColumn = max(
+            0,
+            artefact.gridColumn + deltaColumn
+        )
+
+        rows = max(
+            rows,
+            newRow + artefact.height + 10
+        )
 
         Task {
             await presenter.moveArtefact(
