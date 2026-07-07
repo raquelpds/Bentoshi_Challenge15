@@ -7,6 +7,11 @@
 
 import SwiftUI
 
+private struct GridPosition {
+    let row: Int
+    let column: Int
+}
+
 struct WorkspaceContent: View {
     
     @Environment(\.colorScheme) private var colorScheme
@@ -42,6 +47,9 @@ struct WorkspaceContent: View {
 
     @State private var draggingArtefactID: UUID?
     @State private var selectedArtefactID: UUID?
+    
+    @State private var temporaryGridPositions: [UUID: GridPosition] = [:]
+    @State private var pendingResizeSizes: [UUID: CGSize] = [:]
     
     private let gridLeftPadding: CGFloat = 12
 
@@ -92,6 +100,14 @@ struct WorkspaceContent: View {
 //raquel
 extension WorkspaceContent {
     
+    private func gridRow(for artefact: Artefact) -> Int {
+        temporaryGridPositions[artefact.id]?.row ?? artefact.gridRow
+    }
+
+    private func gridColumn(for artefact: Artefact) -> Int {
+        temporaryGridPositions[artefact.id]?.column ?? artefact.gridColumn
+    }
+    
     private func visualWidth(from gridWidth: CGFloat) -> CGFloat {
         max(cellSize - artefactGap, gridWidth - artefactGap)
     }
@@ -109,30 +125,40 @@ extension WorkspaceContent {
     }
 
     private func displayedWidth(for artefact: Artefact) -> CGFloat {
+        if let pendingSize = pendingResizeSizes[artefact.id] {
+            return CGFloat(pendingSize.width) * cellSize
+        }
+
         let offset = resizeOffset(for: artefact)
 
-        let resizedWidth = artefact.width + Int(
-            (offset.width / cellSize).rounded()
-        )
+        let baseWidth = CGFloat(artefact.width) * cellSize
+        let resizedWidth = baseWidth + offset.width
 
-        return CGFloat(max(1, resizedWidth)) * cellSize
+        let minimumWidth = CGFloat(artefact.type.initialWidth) * cellSize
+
+        return max(minimumWidth, resizedWidth)
     }
 
     private func displayedHeight(for artefact: Artefact) -> CGFloat {
+        if let pendingSize = pendingResizeSizes[artefact.id] {
+            return CGFloat(pendingSize.height) * cellSize
+        }
+
         let offset = resizeOffset(for: artefact)
 
-        let resizedHeight = artefact.height + Int(
-            (offset.height / cellSize).rounded()
-        )
+        let baseHeight = CGFloat(artefact.height) * cellSize
+        let resizedHeight = baseHeight + offset.height
 
-        return CGFloat(max(1, resizedHeight)) * cellSize
+        let minimumHeight = CGFloat(artefact.type.initialHeight) * cellSize
+
+        return max(minimumHeight, resizedHeight)
     }
 
     private func positionX(
         for artefact: Artefact,
         displayedWidth: CGFloat
     ) -> CGFloat {
-        CGFloat(artefact.gridColumn) * cellSize
+        CGFloat(gridColumn(for: artefact)) * cellSize
         + displayedWidth / 2
         + dragOffset(for: artefact).width
     }
@@ -141,7 +167,7 @@ extension WorkspaceContent {
         for artefact: Artefact,
         displayedHeight: CGFloat
     ) -> CGFloat {
-        CGFloat(artefact.gridRow) * cellSize
+        CGFloat(gridRow(for: artefact)) * cellSize
         + displayedHeight / 2
         + dragOffset(for: artefact).height
     }
@@ -214,7 +240,12 @@ extension WorkspaceContent {
                 handleRevealInFinder(artefact)
             },
             onResizeChanged: { translation in
-                resizeOffsets[artefact.id] = translation
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+
+                withTransaction(transaction) {
+                    resizeOffsets[artefact.id] = translation
+                }
             },
             onResizeEnded: { translation in
                 handleResizeEnded(
@@ -240,10 +271,11 @@ extension WorkspaceContent {
             )
         )
         .zIndex(draggingArtefactID == artefact.id ? 1 : 0)
-        .animation(
-            .spring(),
-            value: resizeOffset(for: artefact)
-        )
+        .transaction { transaction in
+            if draggingArtefactID == artefact.id {
+                transaction.animation = nil
+            }
+        }
         .gesture(
             dragGesture(for: artefact)
         )
@@ -294,79 +326,112 @@ extension WorkspaceContent {
 //Aqui fica o comportamento visual de arrastar/redimensionar.
 //raquel
 extension WorkspaceContent {
-
+    
     private func dragGesture(
         for artefact: Artefact
     ) -> some Gesture {
         DragGesture()
             .onChanged { value in
                 draggingArtefactID = artefact.id
-                dragOffsets[artefact.id] = value.translation
+                
+                withTransaction(Transaction(animation: nil)) {
+                    dragOffsets[artefact.id] = value.translation
+                }
             }
             .onEnded { value in
                 let deltaColumn = Int(
                     (value.translation.width / cellSize).rounded()
                 )
-
+                
                 let deltaRow = Int(
                     (value.translation.height / cellSize).rounded()
                 )
-
-                handleMoveEnded(
-                    artefact,
-                    deltaRow: deltaRow,
-                    deltaColumn: deltaColumn
+                
+                let newRow = max(
+                    0,
+                    artefact.gridRow + deltaRow
                 )
-
-                draggingArtefactID = nil
-                dragOffsets[artefact.id] = .zero
+                
+                let newColumn = max(
+                    0,
+                    artefact.gridColumn + deltaColumn
+                )
+                
+                withTransaction(Transaction(animation: nil)) {
+                    temporaryGridPositions[artefact.id] = GridPosition(
+                        row: newRow,
+                        column: newColumn
+                    )
+                    
+                    dragOffsets[artefact.id] = .zero
+                    draggingArtefactID = nil
+                }
+                
+                Task {
+                    await handleMoveEnded(
+                        artefact,
+                        row: newRow,
+                        column: newColumn
+                    )
+                    
+                    await MainActor.run {
+                        temporaryGridPositions[artefact.id] = nil
+                    }
+                }
             }
     }
-
+    
     private func handleMoveEnded(
         _ artefact: Artefact,
-        deltaRow: Int,
-        deltaColumn: Int
-    ) {
-        let newRow = max(
-            0,
-            artefact.gridRow + deltaRow
-        )
-
-        let newColumn = max(
-            0,
-            artefact.gridColumn + deltaColumn
-        )
-
-        rows = max(
-            rows,
-            newRow + artefact.height + 10
-        )
-
-        Task {
-            await presenter.moveArtefact(
-                artefact,
-                in: workspace,
-                to: newRow,
-                column: newColumn
+        row: Int,
+        column: Int
+    ) async {
+        await MainActor.run {
+            rows = max(
+                rows,
+                row + artefact.height + 10
             )
         }
+        
+        await presenter.moveArtefact(
+            artefact,
+            in: workspace,
+            to: row,
+            column: column
+        )
     }
-
+    
     private func handleResizeEnded(
         _ artefact: Artefact,
         translation: CGSize
     ) {
-        let deltaWidth = Int(
-            (translation.width / cellSize).rounded()
+        let baseWidth = CGFloat(artefact.width) * cellSize
+        let baseHeight = CGFloat(artefact.height) * cellSize
+
+        let finalVisualWidth = baseWidth + translation.width
+        let finalVisualHeight = baseHeight + translation.height
+
+        let newWidth = max(
+            artefact.type.initialWidth,
+            Int((finalVisualWidth / cellSize).rounded())
         )
 
-        let deltaHeight = Int(
-            (translation.height / cellSize).rounded()
+        let newHeight = max(
+            artefact.type.initialHeight,
+            Int((finalVisualHeight / cellSize).rounded())
         )
 
-        let newWidth = artefact.width + deltaWidth
-        let newHeight = artefact.height + deltaHeight
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+
+        withTransaction(transaction) {
+            pendingResizeSizes[artefact.id] = CGSize(
+                width: CGFloat(newWidth),
+                height: CGFloat(newHeight)
+            )
+
+            resizeOffsets[artefact.id] = .zero
+        }
 
         Task {
             await presenter.resizeArtefact(
@@ -375,8 +440,15 @@ extension WorkspaceContent {
                 width: newWidth,
                 height: newHeight
             )
-        }
 
-        resizeOffsets[artefact.id] = .zero
+            await MainActor.run {
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+
+                withTransaction(transaction) {
+                    pendingResizeSizes[artefact.id] = nil
+                }
+            }
+        }
     }
 }
