@@ -136,7 +136,7 @@ extension WorkspaceInteractor {
         width: Int,
         height: Int
     ) -> Bool {
-        let columns = 20
+        let columns = 25
         
         if row < 0 ||
             column < 0 ||
@@ -155,8 +155,7 @@ extension WorkspaceInteractor {
                 column + width <= other.gridColumn ||
                 column >= other.gridColumn + other.width ||
                 row + height <= other.gridRow ||
-                row >= other.gridRow + other.height
-            )
+                row >= other.gridRow + other.height)
             
             if overlaps {
                 return false

@@ -22,8 +22,10 @@ struct LinkArtefactPreview: View {
             HStack{
                 Image(systemName: "link")
                     .bold()
+                    .foregroundStyle(.white)
                 Text(name)
                     .font(.title2)
+                    .foregroundStyle(.white)
                     .bold()
                     .lineLimit(2)
             }

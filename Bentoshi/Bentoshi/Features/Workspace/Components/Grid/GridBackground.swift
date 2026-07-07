@@ -7,10 +7,6 @@
 
 import SwiftUI
 
-import SwiftUI
-
-import SwiftUI
-
 struct GridBackground: View {
 
     let rows: Int
@@ -19,12 +15,6 @@ struct GridBackground: View {
 
     private let dotSize: CGFloat = 3
     private let dotSpacing: CGFloat = 32
-
-    private let dotColor = Color(
-        red: 230 / 255,
-        green: 230 / 255,
-        blue: 230 / 255
-    )
 
     var body: some View {
         let width = CGFloat(columns) * cellSize
@@ -46,7 +36,7 @@ struct GridBackground: View {
 
                     context.fill(
                         Path(ellipseIn: rect),
-                        with: .color(dotColor)
+                        with: .color(Color("dotColor").opacity(0.9))
                     )
 
                     x += dotSpacing

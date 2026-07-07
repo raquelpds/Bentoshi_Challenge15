@@ -205,29 +205,39 @@ struct WorkspaceView: View {
     }
     
     private var contentView: some View {
-        VStack {
+        VStack(spacing: 0) {
             if let current {
                 WorkspaceTitle(
                     workspace: current,
                     presenter: presenter
                 )
-                ZStack {
-                    WorkspaceContent(
-                        workspace: current,
-                        presenter: presenter,
-                        route: $sheetRoute,
-                        detailRoute: $detailRoute,
-                        alert: $alert
-                    )
-                    .opacity(isSearchActive ? 0 : 1)
-                    .allowsHitTesting(!isSearchActive)
-                    
-                    WorkspaceSearchContent(
-                        workspace: current,
-                        presenter: presenter
-                    )
-                    .opacity(isSearchActive ? 1 : 0)
-                    .allowsHitTesting(isSearchActive)
+                .zIndex(2)
+
+                ZStack(alignment: .top) {
+                    RoundedRectangle(cornerRadius: 32)
+                        .fill(Color("gridColor"))
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 0)
+
+                    ZStack {
+                        WorkspaceContent(
+                            workspace: current,
+                            presenter: presenter,
+                            route: $sheetRoute,
+                            detailRoute: $detailRoute,
+                            alert: $alert
+                        )
+                        .opacity(isSearchActive ? 0 : 1)
+                        .allowsHitTesting(!isSearchActive)
+
+                        WorkspaceSearchContent(
+                            workspace: current,
+                            presenter: presenter
+                        )
+                        .opacity(isSearchActive ? 1 : 0)
+                        .allowsHitTesting(isSearchActive)
+                    }
+                    .padding(.top, 24)
                 }
             }
         }
