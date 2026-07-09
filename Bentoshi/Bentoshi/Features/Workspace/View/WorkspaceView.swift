@@ -13,7 +13,7 @@ enum WorkspaceSheetRoute: Identifiable {
     case newLink
     case updateArchive(Artefact)
     case updateLink(Artefact)
-    
+
     var id: String {
         switch self {
         case .newArchive:
@@ -74,6 +74,9 @@ struct WorkspaceView: View {
     @State private var showColorPickerPopover = false
     
     let sortOption: SortOption
+    
+    let workspace: Workspace
+    
     var current: Workspace? {
         workspaces.first {$0.id == selectedID}
     }
@@ -81,16 +84,17 @@ struct WorkspaceView: View {
     init(presenter: WorkspacePresenter, sortOption: SortOption, workspace: Workspace) {
         _presenter = State(initialValue: presenter)
         _selectedID = State(initialValue: workspace.id)
-        
+
         self.sortOption = sortOption
-        
+        self.workspace = workspace
+
         switch sortOption {
         case .alphabet:
             _workspaces = Query(sort: \Workspace.normalizedName, order: .forward)
-            
+
         case .lastCreated:
             _workspaces = Query(sort: \Workspace.createdAt, order: .reverse)
-            
+
         case .lastModified:
             _workspaces = Query(sort: \Workspace.updatedAt, order: .reverse)
         }
@@ -201,29 +205,39 @@ struct WorkspaceView: View {
     }
     
     private var contentView: some View {
-        VStack {
+        VStack(spacing: 0) {
             if let current {
                 WorkspaceTitle(
                     workspace: current,
                     presenter: presenter
                 )
-                ZStack {
-                    WorkspaceDetailContent(
-                        workspace: current,
-                        presenter: presenter,
-                        sheetRoute: $sheetRoute,
-                        detailRoute: $detailRoute,
-                        alert: $alert
-                    )
-                    .opacity(isSearchActive ? 0 : 1)
-                    .allowsHitTesting(!isSearchActive)
-                    
-                    WorkspaceSearchContent(
-                        workspace: current,
-                        presenter: presenter
-                    )
-                    .opacity(isSearchActive ? 1 : 0)
-                    .allowsHitTesting(isSearchActive)
+                .zIndex(2)
+
+                ZStack(alignment: .top) {
+                    RoundedRectangle(cornerRadius: 32)
+                        .fill(Color("gridColor"))
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 0)
+
+                    ZStack {
+                        WorkspaceContent(
+                            workspace: current,
+                            presenter: presenter,
+                            route: $sheetRoute,
+                            detailRoute: $detailRoute,
+                            alert: $alert
+                        )
+                        .opacity(isSearchActive ? 0 : 1)
+                        .allowsHitTesting(!isSearchActive)
+
+                        WorkspaceSearchContent(
+                            workspace: current,
+                            presenter: presenter
+                        )
+                        .opacity(isSearchActive ? 1 : 0)
+                        .allowsHitTesting(isSearchActive)
+                    }
+                    .padding(.top, 24)
                 }
             }
         }
